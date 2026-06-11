@@ -13,6 +13,7 @@ if (typeof QUESTION_BANK === 'undefined') {
 // =====================================================
 // РЕПЛИКИ ЭЙСА
 // =====================================================
+var ACE_NEW_BADGE = 'Значок в коллекцию! Загляни в Зал славы! 🏆';
 var ACE_MENU = [
   'Привет, чемпион! Готов потренироваться? 🎾',
   'Корт ждёт! Сыграем гейм? ⚡',
@@ -50,6 +51,17 @@ var ACE_RESULTS_HARD = [
 var ACE_NEW_RANK = 'Новое звание! Ты теперь {emoji} {name}! Праздник на корте! 🎉';
 var ACE_ONBOARD_HELLO = 'Добро пожаловать в Академию тенниса! 🎾 Я Эйс. Покажи, что умеешь — три мяча на разминку!';
 var ACE_ONBOARD_DONE = '🎉 Зачислен в Академию! Звание: 🎒 Новичок. Вперёд, к тренировкам!';
+
+// =====================================================
+// РЕЕСТР ЗНАЧКОВ
+// =====================================================
+var BADGES = [
+  { id: 'enrolled', emoji: '🎉', name: 'Зачислен',         hint: 'Пройди разминку с Эйсом' },
+  { id: 'sniper',   emoji: '🎯', name: 'Снайпер',          hint: 'Выиграй гейм из 5+ вопросов без единой второй подачи' },
+  { id: 'streak5',  emoji: '🔥', name: 'Серия 5',          hint: 'Ответь верно 5 раз подряд в одном гейме' },
+  { id: 'course',   emoji: '📚', name: 'Спецкурс пройден', hint: 'Собери ★★★ в любом спецкурсе' },
+  { id: 'week',     emoji: '🗓', name: 'Неделя в строю',   hint: 'Тренируйся в 3 разных дня' }
+];
 
 // =====================================================
 // МАППИНГ БЛОКОВ ДЛЯ МЕНЮ (plan 2.7)
@@ -110,7 +122,7 @@ var STORAGE_KEY = 'tennisAcademy.v1';
 
 /** Загружает профиль из localStorage; при ошибке возвращает дефолт */
 function loadProfile() {
-  var def = { v: 1, points: 0, onboarded: false, history: {} };
+  var def = { v: 1, points: 0, onboarded: false, history: {}, bestStreakEver: 0, days: [], badges: {} };
   try {
     var raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return def;
@@ -120,11 +132,15 @@ function loadProfile() {
       console.warn('tennisAcademy: профиль сброшен (несовместимая версия)');
       return def;
     }
-    // Валидация полей поштучно
+    // Валидация полей поштучно (старые поля)
     var pts = (typeof obj.points === 'number' && obj.points >= 0) ? Math.floor(obj.points) : 0;
     var onboarded = obj.onboarded === true;
     var history = (typeof obj.history === 'object' && obj.history !== null && !Array.isArray(obj.history)) ? obj.history : {};
-    return { v: 1, points: pts, onboarded: onboarded, history: history };
+    // Новые поля (аддитивно, дефолты при отсутствии)
+    var bestStreakEver = (typeof obj.bestStreakEver === 'number' && obj.bestStreakEver >= 0) ? Math.floor(obj.bestStreakEver) : 0;
+    var days = (Array.isArray(obj.days)) ? obj.days : [];
+    var badges = (typeof obj.badges === 'object' && obj.badges !== null && !Array.isArray(obj.badges)) ? obj.badges : {};
+    return { v: 1, points: pts, onboarded: onboarded, history: history, bestStreakEver: bestStreakEver, days: days, badges: badges };
   } catch (e) {
     console.warn('tennisAcademy: профиль сброшен (ошибка парсинга)', e);
     return def;
@@ -142,6 +158,32 @@ function saveProfile() {
 
 // Загружаем профиль при старте
 var profile = loadProfile();
+
+// =====================================================
+// ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ДАТ
+// =====================================================
+
+/** Возвращает сегодняшнюю дату в формате 'YYYY-MM-DD' по локальному времени (не UTC!) */
+function todayStr() {
+  var d = new Date();
+  var y = d.getFullYear();
+  var m = String(d.getMonth() + 1);
+  var day = String(d.getDate());
+  if (m.length < 2) m = '0' + m;
+  if (day.length < 2) day = '0' + day;
+  return y + '-' + m + '-' + day;
+}
+
+/** Форматирует timestamp в строку «дд.мм.гггг» */
+function formatDate(ts) {
+  var d = new Date(ts);
+  var day = String(d.getDate());
+  var m = String(d.getMonth() + 1);
+  var y = d.getFullYear();
+  if (day.length < 2) day = '0' + day;
+  if (m.length < 2) m = '0' + m;
+  return day + '.' + m + '.' + y;
+}
 
 // =====================================================
 // ССЫЛКИ НА ЭЛЕМЕНТЫ DOM
@@ -182,12 +224,25 @@ var elResultTitle         = document.getElementById('result-title');
 var elAceResultsBubble    = document.getElementById('ace-results-bubble');
 var elResultPoints        = document.getElementById('result-points');
 var elResultStreak        = document.getElementById('result-streak');
+var elResultBadges        = document.getElementById('result-badges');
 var elResultStarsRow      = document.getElementById('result-stars-row');
 var elResultRankProgress  = document.getElementById('result-rank-progress');
 var elBtnAgain            = document.getElementById('btn-again');
 var elBtnReviewMistakes   = document.getElementById('btn-review-mistakes');
 var elMistakesCount       = document.getElementById('mistakes-count');
 var elBtnAcademy          = document.getElementById('btn-academy');
+
+// Кнопка «Выйти из гейма» на экране вопросов
+var elBtnExitGame         = document.getElementById('btn-exit-game');
+var elBtnSkipOnboarding   = document.getElementById('btn-skip-onboarding');
+
+// Кнопка «Зал славы» в меню и обратная кнопка
+var elBtnHall             = document.getElementById('btn-hall');
+var elBtnHallBack         = document.getElementById('btn-hall-back');
+var elHallScreen          = document.getElementById('screen-hall');
+
+// Тост для значков
+var elBadgeToast          = document.getElementById('badge-toast');
 
 // =====================================================
 // ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
@@ -221,6 +276,95 @@ function pickRandom(arr) {
 /** Возвращает букву варианта по индексу */
 function optionLetter(index) {
   return ['А', 'Б', 'В', 'Г'][index] || '?';
+}
+
+// =====================================================
+// СИСТЕМА ЗНАЧКОВ
+// =====================================================
+
+// Очередь тостов и флаг активности
+var toastQueue = [];
+var toastActive = false;
+
+/**
+ * Выдаёт значок игроку.
+ * quiet=true — без тоста (ретроактивная выдача при старте).
+ * Возвращает true, если значок выдан впервые.
+ */
+function awardBadge(id, quiet) {
+  // Уже есть — пропускаем
+  if (profile.badges[id]) return false;
+
+  // Записываем метку времени и сохраняем профиль
+  profile.badges[id] = Date.now();
+  saveProfile();
+
+  // Если есть активная сессия — фиксируем в session.newBadges
+  if (session && session.newBadges) {
+    session.newBadges.push(id);
+  }
+
+  // Тост при не-тихом вручении
+  if (!quiet) {
+    var def = null;
+    for (var i = 0; i < BADGES.length; i++) {
+      if (BADGES[i].id === id) { def = BADGES[i]; break; }
+    }
+    if (def) {
+      showBadgeToast('🏅 Новый значок: ' + def.emoji + ' ' + def.name + '!');
+    }
+  }
+
+  return true;
+}
+
+/** Добавляет сообщение в очередь тостов и запускает показ, если не активен */
+function showBadgeToast(msg) {
+  toastQueue.push(msg);
+  if (!toastActive) processToastQueue();
+}
+
+/** Берёт следующий тост из очереди и показывает его */
+function processToastQueue() {
+  if (toastQueue.length === 0) {
+    toastActive = false;
+    return;
+  }
+  toastActive = true;
+  var msg = toastQueue.shift();
+  elBadgeToast.textContent = msg;
+  elBadgeToast.classList.remove('hidden');
+  // Перезапускаем анимацию
+  elBadgeToast.classList.remove('badge-toast-show');
+  // Принудительный reflow для перезапуска анимации
+  void elBadgeToast.offsetWidth;
+  elBadgeToast.classList.add('badge-toast-show');
+  setTimeout(function() {
+    elBadgeToast.classList.add('hidden');
+    elBadgeToast.classList.remove('badge-toast-show');
+    toastActive = false;
+    // Показываем следующий тост с небольшой паузой
+    setTimeout(processToastQueue, 400);
+  }, 3000);
+}
+
+/**
+ * Ретроактивная выдача значков при инициализации — тихо, без тостов.
+ * Вызывается один раз после loadProfile, до показа экранов.
+ */
+function checkRetroBadges() {
+  var changed = false;
+  // Зачислен: если онбординг уже пройден
+  if (profile.onboarded) {
+    if (awardBadge('enrolled', true)) changed = true;
+  }
+  // Спецкурс: проверяем блоки 7–16
+  for (var bid = 7; bid <= 16; bid++) {
+    if (getBlockStars(bid) === 3) {
+      if (awardBadge('course', true)) changed = true;
+    }
+  }
+  // При изменениях saveProfile уже вызван внутри awardBadge
 }
 
 /** Порядковый номер сложности для сортировки */
@@ -354,7 +498,8 @@ function startSession(mode, pool, blockId) {
     mistakes: [],         // вопросы с провалом обеих попыток
     answered: false,
     rankBefore: getRank(profile.points),
-    starsBefore: (bid !== null) ? getBlockStars(bid) : null
+    starsBefore: (bid !== null) ? getBlockStars(bid) : null,
+    newBadges: []         // значки, полученные в этом гейме
   };
 
   // Инициализируем слоты
@@ -409,6 +554,7 @@ function showScreen(name) {
   elMenuScreen.classList.toggle('hidden', name !== 'menu');
   elQuestionScreen.classList.toggle('hidden', name !== 'question');
   elResultsScreen.classList.toggle('hidden', name !== 'results');
+  elHallScreen.classList.toggle('hidden', name !== 'hall');
 }
 
 // =====================================================
@@ -527,6 +673,10 @@ function handleAnswer(clickedIdx, isCorrect, q, shuffledOptions, isRetry) {
     earned = stakeVal * multiplier;
     session.streak++;
     if (session.streak > session.bestStreak) session.bestStreak = session.streak;
+    // Обновляем рекорд серии за всё время
+    if (session.streak > profile.bestStreakEver) profile.bestStreakEver = session.streak;
+    // Значок «Серия 5» — выдаётся сразу в гейме
+    if (session.streak >= 5) awardBadge('streak5', false);
 
     // Точка становится зелёной
     session.slots[slot] = 'green';
@@ -598,6 +748,14 @@ function handleAnswer(clickedIdx, isCorrect, q, shuffledOptions, isRetry) {
   }
   profile.history[key].t = Date.now();
 
+  // Трекинг дня (локальная дата, не UTC!)
+  var today = todayStr();
+  if (profile.days.indexOf(today) === -1) {
+    profile.days.push(today);
+    // «Неделя в строю» — 3 разных дня
+    if (profile.days.length >= 3) awardBadge('week', false);
+  }
+
   // Сохраняем профиль после каждого ответа
   saveProfile();
 
@@ -649,6 +807,17 @@ function showResults() {
   }
   var ratio = session.n > 0 ? greenCount / session.n : 0;
 
+  // Проверка «Снайпер»: настоящий гейм (не онбординг и не разбор ошибок),
+  // n>=5, ни одной второй подачи (queue.length === n — retry не добавлялись)
+  if (session.mode !== 'mistakes' && session.n >= 5 && session.queue.length === session.n) {
+    awardBadge('sniper', false);
+  }
+
+  // Проверка «Спецкурс»: после ЛЮБОГО гейма
+  for (var bid2 = 7; bid2 <= 16; bid2++) {
+    if (getBlockStars(bid2) === 3) awardBadge('course', false);
+  }
+
   // Заголовок по порогам
   var title = '';
   if (ratio >= 0.85) title = 'Гейм выигран! 🏆';
@@ -662,7 +831,8 @@ function showResults() {
   else if (ratio >= 0.55) aceReply = pickRandom(ACE_RESULTS_GOOD);
   else aceReply = pickRandom(ACE_RESULTS_HARD);
 
-  // Проверяем новое звание
+  // Проверяем новое звание — приоритетная реплика, конфетти
+  var gotNewRank = false;
   var rankAfter = getRank(profile.points);
   if (rankAfter.min > session.rankBefore.min) {
     // Получено новое звание — специальная реплика и конфетти
@@ -670,6 +840,30 @@ function showResults() {
       .replace('{emoji}', rankAfter.emoji)
       .replace('{name}', rankAfter.name);
     showConfetti();
+    gotNewRank = true;
+  }
+
+  // Строка значков на итогах
+  elResultBadges.classList.add('hidden');
+  elResultBadges.textContent = '';
+  if (session.newBadges && session.newBadges.length > 0) {
+    // Если не получили новое звание — ещё и реплика Эйса про значок
+    if (!gotNewRank) {
+      aceReply = ACE_NEW_BADGE;
+    }
+    // Собираем строку со всеми новыми значками
+    var badgeNames = [];
+    for (var bi = 0; bi < session.newBadges.length; bi++) {
+      var badgeId = session.newBadges[bi];
+      for (var bj = 0; bj < BADGES.length; bj++) {
+        if (BADGES[bj].id === badgeId) {
+          badgeNames.push(BADGES[bj].emoji + ' ' + BADGES[bj].name);
+          break;
+        }
+      }
+    }
+    elResultBadges.textContent = '🏅 Новые значки: ' + badgeNames.join(', ');
+    elResultBadges.classList.remove('hidden');
   }
 
   elAceResultsBubble.textContent = aceReply;
@@ -805,6 +999,62 @@ function renderRankProgressBar() {
   }
 }
 
+// =====================================================
+// ЗАЛ СЛАВЫ
+// =====================================================
+
+/** Рендерит экран «Зал славы» */
+function renderHall() {
+  var rank = getRank(profile.points);
+
+  // Звание
+  var elHallRank = document.getElementById('hall-rank');
+  elHallRank.textContent = rank.emoji + ' ' + rank.name;
+
+  // Очки
+  var elHallPoints = document.getElementById('hall-points');
+  elHallPoints.textContent = profile.points + ' 🎾';
+
+  // Рекордная серия
+  var elHallBestStreak = document.getElementById('hall-best-streak');
+  elHallBestStreak.textContent = profile.bestStreakEver;
+
+  // Подпись полки значков
+  var earned = 0;
+  for (var k = 0; k < BADGES.length; k++) {
+    if (profile.badges[BADGES[k].id]) earned++;
+  }
+  var elShelfTitle = document.getElementById('hall-shelf-title');
+  elShelfTitle.textContent = 'Собрано ' + earned + ' из ' + BADGES.length;
+
+  // Полка значков
+  var shelf = document.getElementById('badges-shelf');
+  shelf.innerHTML = '';
+
+  for (var i = 0; i < BADGES.length; i++) {
+    var def = BADGES[i];
+    var ts = profile.badges[def.id];
+    var isEarned = !!ts;
+
+    var card = document.createElement('div');
+    card.className = 'badge-card' + (isEarned ? ' earned' : ' goal');
+
+    if (isEarned) {
+      card.innerHTML =
+        '<div class="badge-emoji">' + def.emoji + '</div>' +
+        '<div class="badge-name">' + escapeHtml(def.name) + '</div>' +
+        '<div class="badge-date">получен ' + escapeHtml(formatDate(ts)) + '</div>';
+    } else {
+      card.innerHTML =
+        '<div class="badge-emoji badge-emoji-goal">' + def.emoji + '</div>' +
+        '<div class="badge-name">' + escapeHtml(def.name) + '</div>' +
+        '<div class="badge-hint">Попробуй: ' + escapeHtml(def.hint) + '</div>';
+    }
+
+    shelf.appendChild(card);
+  }
+}
+
 /** Строит карточки блоков для одной секции */
 function buildSectionCards(sectionName, container) {
   container.innerHTML = '';
@@ -884,7 +1134,8 @@ function startOnboarding() {
     mistakes: [],
     answered: false,
     rankBefore: getRank(profile.points),
-    starsBefore: 0
+    starsBefore: 0,
+    newBadges: []         // значки, полученные в онбординге
   };
   for (var j = 0; j < n; j++) session.slots.push('pending');
 
@@ -898,10 +1149,14 @@ function showOnboardingResults() {
   profile.onboarded = true;
   saveProfile();
 
+  // Выдаём значок «Зачислен»
+  awardBadge('enrolled', false);
+
   elResultTitle.textContent = '🎉 Зачислен в Академию!';
   elAceResultsBubble.textContent = ACE_ONBOARD_DONE;
   elResultPoints.textContent = '+' + session.sessionPoints + ' 🎾';
   elResultStreak.classList.add('hidden');
+  elResultBadges.classList.add('hidden');
   elResultStarsRow.classList.add('hidden');
   renderRankProgress(elResultRankProgress);
 
@@ -968,9 +1223,48 @@ elBtnAcademy.addEventListener('click', function() {
   showScreen('menu');
 });
 
+// «← В Академию» в гейме (выход без итогов)
+elBtnExitGame.addEventListener('click', function() {
+  if (session && session.mode === 'onboarding') {
+    // Выход из онбординга — засчитываем как завершённый
+    profile.onboarded = true;
+    saveProfile();
+    awardBadge('enrolled', false);
+  }
+  session = null;
+  buildMenu();
+  showScreen('menu');
+});
+
+// «Сразу в Академию →» на экране онбординга
+elBtnSkipOnboarding.addEventListener('click', function() {
+  profile.onboarded = true;
+  saveProfile();
+  awardBadge('enrolled', false);
+  session = null;
+  buildMenu();
+  showScreen('menu');
+});
+
+// «🏆 Зал славы» в меню
+elBtnHall.addEventListener('click', function() {
+  renderHall();
+  showScreen('hall');
+});
+
+// «← В Академию» в Зале славы
+elBtnHallBack.addEventListener('click', function() {
+  buildMenu();
+  showScreen('menu');
+});
+
 // =====================================================
 // ИНИЦИАЛИЗАЦИЯ ПРИЛОЖЕНИЯ
 // =====================================================
+
+// Ретроактивная выдача значков (тихо, без тостов)
+checkRetroBadges();
+
 if (!profile.onboarded) {
   // Новый пользователь — показываем онбординг
   buildOnboarding();

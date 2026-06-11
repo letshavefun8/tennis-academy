@@ -17,6 +17,7 @@
       <div class="ace-big ace-wobble" id="ace-onboarding">🎾</div>
       <div class="ace-bubble" id="ace-onboarding-bubble"></div>
       <button id="btn-start-onboarding" class="btn btn-accent btn-large">Поехали! 🎾</button>
+      <button id="btn-skip-onboarding" class="btn-skip">Сразу в Академию →</button>
     </div>
   </div>
 
@@ -38,6 +39,9 @@
       <div id="rank-progress-bar" class="rank-progress-bar"></div>
     </div>
     <p id="rank-progress-text" class="rank-progress-text"></p>
+
+    <!-- Зал славы -->
+    <button id="btn-hall" class="btn btn-outline btn-hall">🏆 Зал славы</button>
 
     <!-- Тренировка дня -->
     <button id="btn-daily" class="btn btn-accent btn-daily">⚡ Тренировка дня</button>
@@ -62,6 +66,11 @@
 
   <!-- ===== ЭКРАН 3: ВОПРОС ===== -->
   <div id="screen-question" class="screen hidden">
+
+    <!-- Топбар с кнопкой выхода -->
+    <div class="question-topbar">
+      <button id="btn-exit-game" class="btn-exit">← В Академию</button>
+    </div>
 
     <!-- Точки-шаги и счётчик -->
     <div id="step-dots" class="step-dots"></div>
@@ -110,6 +119,7 @@
 
     <p id="result-points" class="result-points"></p>
     <p id="result-streak" class="result-streak hidden"></p>
+    <p id="result-badges" class="result-badges hidden"></p>
 
     <!-- Звёзды блока (только для block-режима) -->
     <div id="result-stars-row" class="result-stars-row hidden"></div>
@@ -126,6 +136,24 @@
     </div>
 
   </div>
+
+  <!-- ===== ЭКРАН 5: ЗАЛ СЛАВЫ ===== -->
+  <div id="screen-hall" class="screen hidden">
+    <div class="question-topbar">
+      <button id="btn-hall-back" class="btn-exit">← В Академию</button>
+    </div>
+    <h2 class="hall-title">🏆 Зал славы</h2>
+    <div class="hall-rank" id="hall-rank"></div>
+    <div class="hall-stats">
+      <div class="hall-stat"><span id="hall-points"></span><span class="hall-stat-label">всего мячей</span></div>
+      <div class="hall-stat"><span id="hall-best-streak"></span><span class="hall-stat-label">рекордная серия</span></div>
+    </div>
+    <p class="hall-shelf-title" id="hall-shelf-title"></p>
+    <div id="badges-shelf" class="badges-shelf"></div>
+  </div>
+
+  <!-- Тост для значков -->
+  <div id="badge-toast" class="badge-toast hidden"></div>
 
   <!-- Данные подключаются ДО логики -->
   <script src="questions.js"></script>
