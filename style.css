@@ -1,0 +1,116 @@
+/* Цвета в духе теннисного корта: тёмно-зелёный фон, салатовый акцент */
+:root {
+  --court: #1d5c3a;
+  --court-dark: #14442b;
+  --ball: #d8f25a;
+  --line: #ffffff;
+  --wrong: #d9534f;
+  --right: #3fa75c;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: var(--court);
+  color: var(--line);
+  min-height: 100vh;
+}
+
+header {
+  text-align: center;
+  padding: 24px 16px 8px;
+}
+
+h1 { margin: 0; font-size: 28px; }
+
+.subtitle { margin: 6px 0 0; opacity: 0.8; }
+
+main {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+/* --- меню --- */
+
+#block-list { display: flex; flex-direction: column; gap: 8px; }
+
+#block-list button {
+  text-align: left;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+#block-list .count { opacity: 0.7; }
+
+/* --- кнопки --- */
+
+button {
+  font: inherit;
+  color: var(--line);
+  background: var(--court-dark);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 10px;
+  padding: 12px 16px;
+  cursor: pointer;
+}
+
+button:hover { border-color: var(--ball); }
+
+/* --- экран вопроса --- */
+
+.quiz-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  gap: 8px;
+}
+
+#quit-btn { padding: 6px 10px; font-size: 14px; }
+
+.meta { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+
+.badge {
+  font-size: 12px;
+  background: var(--court-dark);
+  border-radius: 99px;
+  padding: 3px 10px;
+  opacity: 0.9;
+}
+
+#q-text { font-size: 19px; line-height: 1.45; margin: 12px 0 16px; }
+
+#options { display: flex; flex-direction: column; gap: 8px; }
+
+#options button { text-align: left; line-height: 1.35; }
+
+/* подсветка после ответа */
+#options button.correct { background: var(--right); border-color: var(--right); }
+#options button.wrong { background: var(--wrong); border-color: var(--wrong); }
+#options button:disabled { cursor: default; opacity: 1; }
+#options button:disabled:not(.correct):not(.wrong) { opacity: 0.55; }
+
+#feedback {
+  margin-top: 16px;
+  background: var(--court-dark);
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+
+#verdict { margin: 0; font-weight: 700; }
+
+#explanation { line-height: 1.5; opacity: 0.95; }
+
+#next-btn { background: var(--ball); color: #143; font-weight: 700; }
+
+/* --- экран результата --- */
+
+#result-screen { text-align: center; }
+
+#result-screen button { margin: 8px 4px 0; }
+
+#retry-mistakes-btn { background: var(--ball); color: #143; font-weight: 700; }

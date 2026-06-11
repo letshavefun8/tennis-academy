@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Теннисный тренажёр — игровое мышление</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>🎾 Теннисный тренажёр</h1>
+    <p class="subtitle">Игровое мышление: 116 ситуаций от первого лица</p>
+  </header>
+
+  <!-- Экран меню: выбор блока вопросов -->
+  <main id="menu-screen">
+    <h2>Выберите тему</h2>
+    <div id="block-list"></div>
+  </main>
+
+  <!-- Экран вопроса -->
+  <main id="quiz-screen" hidden>
+    <div class="quiz-top">
+      <button id="quit-btn" type="button">← В меню</button>
+      <span id="progress"></span>
+      <span id="score"></span>
+    </div>
+    <div class="meta">
+      <span id="q-block" class="badge"></span>
+      <span id="q-difficulty" class="badge"></span>
+      <span id="q-phase" class="badge"></span>
+    </div>
+    <p id="q-text"></p>
+    <div id="options"></div>
+    <div id="feedback" hidden>
+      <p id="verdict"></p>
+      <p id="explanation"></p>
+      <button id="next-btn" type="button">Дальше →</button>
+    </div>
+  </main>
+
+  <!-- Экран результата -->
+  <main id="result-screen" hidden>
+    <h2 id="result-title"></h2>
+    <p id="result-text"></p>
+    <button id="retry-mistakes-btn" type="button" hidden>Повторить ошибки</button>
+    <button id="to-menu-btn" type="button">В меню</button>
+  </main>
+
+  <script src="questions.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
