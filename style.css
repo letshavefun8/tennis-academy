@@ -1,116 +1,705 @@
-/* Цвета в духе теннисного корта: тёмно-зелёный фон, салатовый акцент */
-:root {
-  --court: #1d5c3a;
-  --court-dark: #14442b;
-  --ball: #d8f25a;
-  --line: #ffffff;
-  --wrong: #d9534f;
-  --right: #3fa75c;
-}
-
-* { box-sizing: border-box; }
-
-body {
+/* ===== ОБЩИЙ СБРОС ===== */
+*, *::before, *::after {
+  box-sizing: border-box;
   margin: 0;
-  font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
-  background: var(--court);
-  color: var(--line);
+  padding: 0;
+}
+
+/* ===== БАЗОВЫЕ СТИЛИ: игровая тёплая тема ===== */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background: linear-gradient(160deg, #fffbeb 0%, #fef9ee 60%, #fff7e6 100%);
+  color: #1a202c;
   min-height: 100vh;
-}
-
-header {
-  text-align: center;
-  padding: 24px 16px 8px;
-}
-
-h1 { margin: 0; font-size: 28px; }
-
-.subtitle { margin: 6px 0 0; opacity: 0.8; }
-
-main {
-  max-width: 640px;
-  margin: 0 auto;
   padding: 16px;
 }
 
-/* --- меню --- */
-
-#block-list { display: flex; flex-direction: column; gap: 8px; }
-
-#block-list button {
-  text-align: left;
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
+/* ===== ЭКРАНЫ ===== */
+.screen {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 20px 0 60px;
 }
 
-#block-list .count { opacity: 0.7; }
+.hidden {
+  display: none !important;
+}
 
-/* --- кнопки --- */
+/* ===== КОНФЕТТИ ===== */
+.confetti-layer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 9999;
+  overflow: hidden;
+}
 
-button {
-  font: inherit;
-  color: var(--line);
-  background: var(--court-dark);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  border-radius: 10px;
+.confetti-item {
+  position: absolute;
+  top: -2rem;
+  animation: confetti-fall linear forwards;
+}
+
+@keyframes confetti-fall {
+  0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
+  80%  { opacity: 1; }
+  100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+}
+
+/* ===== МАСКОТ ЭЙС ===== */
+.ace-big {
+  font-size: 3.5rem;
+  line-height: 1;
+  display: inline-block;
+}
+
+/* Покачивание маскота (меню, итоги) */
+.ace-wobble {
+  animation: ace-wobble 2.4s ease-in-out infinite;
+  transform-origin: center bottom;
+}
+
+@keyframes ace-wobble {
+  0%, 100% { transform: rotate(0deg); }
+  20%       { transform: rotate(6deg); }
+  40%       { transform: rotate(-4deg); }
+  60%       { transform: rotate(5deg); }
+  80%       { transform: rotate(-3deg); }
+}
+
+/* Подпрыгивание при верном ответе */
+.ace-bounce {
+  animation: ace-bounce 0.5s ease-out;
+}
+
+@keyframes ace-bounce {
+  0%   { transform: translateY(0); }
+  30%  { transform: translateY(-18px); }
+  60%  { transform: translateY(-8px); }
+  80%  { transform: translateY(-14px); }
+  100% { transform: translateY(0); }
+}
+
+/* Пузырь речи */
+.ace-bubble {
+  position: relative;
+  display: inline-block;
+  background: #fff;
+  border: 2px solid #f6ad55;
+  border-radius: 16px;
   padding: 12px 16px;
-  cursor: pointer;
+  font-size: 0.95rem;
+  color: #744210;
+  line-height: 1.5;
+  max-width: 280px;
+  margin-left: 12px;
 }
 
-button:hover { border-color: var(--ball); }
+/* Хвостик пузыря */
+.ace-bubble::before {
+  content: '';
+  position: absolute;
+  left: -14px;
+  top: 18px;
+  border-width: 7px 14px 7px 0;
+  border-style: solid;
+  border-color: transparent #f6ad55 transparent transparent;
+}
 
-/* --- экран вопроса --- */
+.ace-bubble::after {
+  content: '';
+  position: absolute;
+  left: -11px;
+  top: 19px;
+  border-width: 6px 12px 6px 0;
+  border-style: solid;
+  border-color: transparent #fff transparent transparent;
+}
 
-.quiz-top {
+/* ===== ОНБОРДИНГ ===== */
+.onboarding-wrap {
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   align-items: center;
-  margin-bottom: 12px;
+  gap: 24px;
+  padding-top: 40px;
+  text-align: center;
+}
+
+.onboarding-wrap .ace-bubble {
+  margin-left: 0;
+  max-width: 320px;
+  font-size: 1.05rem;
+  text-align: center;
+}
+
+.onboarding-wrap .ace-bubble::before,
+.onboarding-wrap .ace-bubble::after {
+  display: none;
+}
+
+/* ===== МЕНЮ ===== */
+h1 {
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: #744210;
+  text-align: center;
+  margin-bottom: 16px;
+  line-height: 1.3;
+}
+
+.menu-ace-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0;
+  margin-bottom: 20px;
+}
+
+/* Звание */
+.rank-line {
+  text-align: center;
+  margin-bottom: 6px;
+}
+
+.rank-label {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #744210;
+}
+
+/* Полоса прогресса звания */
+.rank-progress-wrap {
+  background: #fde9c0;
+  border-radius: 6px;
+  height: 8px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+
+.rank-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #f6ad55, #ed8936);
+  border-radius: 6px;
+  transition: width 0.5s ease;
+  width: 0%;
+}
+
+.rank-progress-text {
+  text-align: center;
+  font-size: 0.82rem;
+  color: #975a16;
+  margin-bottom: 20px;
+}
+
+/* ===== КНОПКА «ТРЕНИРОВКА ДНЯ» ===== */
+.btn-daily {
+  display: block;
+  width: 100%;
+  margin-bottom: 28px;
+  font-size: 1.1rem;
+  padding: 16px 20px;
+}
+
+/* ===== СЕКЦИИ МЕНЮ ===== */
+.menu-section {
+  margin-bottom: 24px;
+}
+
+.section-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #975a16;
+  margin-bottom: 10px;
+  padding-bottom: 4px;
+  border-bottom: 2px solid #fde9c0;
+}
+
+/* ===== КАРТОЧКИ БЛОКОВ ===== */
+.section-cards {
+  display: flex;
+  flex-direction: column;
   gap: 8px;
 }
 
-#quit-btn { padding: 6px 10px; font-size: 14px; }
-
-.meta { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
-
-.badge {
-  font-size: 12px;
-  background: var(--court-dark);
-  border-radius: 99px;
-  padding: 3px 10px;
-  opacity: 0.9;
+.block-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 13px 16px;
+  background: #fff;
+  border: 2px solid #fde9c0;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  color: #2d3748;
+  text-align: left;
+  transition: border-color 0.15s, background 0.15s;
+  line-height: 1.4;
+  width: 100%;
 }
 
-#q-text { font-size: 19px; line-height: 1.45; margin: 12px 0 16px; }
+.block-card:hover,
+.block-card:focus {
+  border-color: #f6ad55;
+  background: #fffbeb;
+  outline: none;
+}
 
-#options { display: flex; flex-direction: column; gap: 8px; }
+.card-label {
+  flex: 1;
+}
 
-#options button { text-align: left; line-height: 1.35; }
+.card-stars {
+  margin-left: 10px;
+  flex-shrink: 0;
+  font-size: 1rem;
+  letter-spacing: 1px;
+}
 
-/* подсветка после ответа */
-#options button.correct { background: var(--right); border-color: var(--right); }
-#options button.wrong { background: var(--wrong); border-color: var(--wrong); }
-#options button:disabled { cursor: default; opacity: 1; }
-#options button:disabled:not(.correct):not(.wrong) { opacity: 0.55; }
+/* ===== ЗВЁЗДЫ ===== */
+.star {
+  font-style: normal;
+}
 
-#feedback {
-  margin-top: 16px;
-  background: var(--court-dark);
-  border-radius: 10px;
+.star-filled {
+  color: #f6ad55;
+}
+
+.star-empty {
+  color: #e2d9c9;
+}
+
+/* ===== ТОЧКИ-ШАГИ ===== */
+.step-dots {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+  transition: background 0.3s ease;
+}
+
+.dot-pending {
+  background: #cbd5e0;
+}
+
+.dot-yellow {
+  background: #f6ad55;
+}
+
+.dot-green {
+  background: #48bb78;
+}
+
+/* ===== СЧЁТЧИК ГЕЙМА ===== */
+.game-counter {
+  text-align: center;
+  font-size: 0.85rem;
+  color: #718096;
+  margin-bottom: 10px;
+}
+
+/* ===== ПЛАШКИ СТАВКИ И СЕРИИ ===== */
+.badges-row {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.stake-badge {
+  background: #fef3c7;
+  border: 1px solid #f6ad55;
+  color: #975a16;
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.streak-badge {
+  background: #fff5e6;
+  border: 1px solid #ed8936;
+  color: #c05621;
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+/* ===== ТЕКСТ ВОПРОСА ===== */
+.question-text-wrap {
+  background: #fff;
+  border-radius: 14px;
+  padding: 18px 20px;
+  margin-bottom: 16px;
+  border: 1px solid #fde9c0;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+
+.question-text {
+  font-size: 1.05rem;
+  line-height: 1.65;
+  color: #2d3748;
+}
+
+/* ===== ВАРИАНТЫ ОТВЕТОВ ===== */
+.options-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.btn-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
   padding: 14px 16px;
+  background: #fff;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  color: #2d3748;
+  text-align: left;
+  line-height: 1.5;
+  transition: border-color 0.15s, background 0.15s;
+  width: 100%;
 }
 
-#verdict { margin: 0; font-weight: 700; }
+.btn-option:not(:disabled):hover,
+.btn-option:not(:disabled):focus {
+  border-color: #f6ad55;
+  background: #fffbeb;
+  outline: none;
+}
 
-#explanation { line-height: 1.5; opacity: 0.95; }
+.btn-option:disabled {
+  cursor: default;
+}
 
-#next-btn { background: var(--ball); color: #143; font-weight: 700; }
+.option-letter {
+  font-weight: 700;
+  color: #975a16;
+  min-width: 24px;
+  flex-shrink: 0;
+  font-size: 0.95rem;
+}
 
-/* --- экран результата --- */
+.option-text {
+  flex: 1;
+}
 
-#result-screen { text-align: center; }
+/* Состояние: правильный ответ */
+.btn-option.correct {
+  border-color: #48bb78;
+  background: #f0fff4;
+}
 
-#result-screen button { margin: 8px 4px 0; }
+.btn-option.correct .option-letter {
+  color: #276749;
+}
 
-#retry-mistakes-btn { background: var(--ball); color: #143; font-weight: 700; }
+/* Состояние: неверный выбор (не лучший) — серый, без красного */
+.btn-option.not-best {
+  border-color: #a0aec0;
+  background: #f7fafc;
+  opacity: 0.75;
+}
+
+.btn-option.not-best .option-letter {
+  color: #a0aec0;
+}
+
+.not-best-hint {
+  display: block;
+  font-size: 0.72rem;
+  color: #a0aec0;
+  margin-top: 2px;
+  font-style: italic;
+}
+
+/* Анимация правильного ответа */
+@keyframes pop-correct {
+  0%   { transform: scale(1) translateY(0); }
+  40%  { transform: scale(1.04) translateY(-4px); }
+  70%  { transform: scale(0.98) translateY(0); }
+  100% { transform: scale(1) translateY(0); }
+}
+
+.btn-option.pop-correct {
+  animation: pop-correct 0.45s ease-out;
+}
+
+/* ===== ОБЪЯСНЕНИЕ (ЭЙС ОБЪЯСНЯЕТ) ===== */
+.explanation {
+  display: flex;
+  gap: 12px;
+  background: #fffbeb;
+  border: 1px solid #f6ad55;
+  border-left: 4px solid #ed8936;
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 18px;
+  line-height: 1.6;
+  align-items: flex-start;
+}
+
+.ace-inline {
+  font-size: 1.6rem;
+  flex-shrink: 0;
+  line-height: 1;
+  margin-top: 2px;
+}
+
+.explanation-body {
+  flex: 1;
+}
+
+.ace-reaction {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #744210;
+  margin-bottom: 6px;
+}
+
+.explanation-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #975a16;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 4px;
+}
+
+.explanation-text {
+  font-size: 0.92rem;
+  color: #744210;
+}
+
+/* ===== КНОПКА «ДАЛЬШЕ» ===== */
+.next-btn-wrap {
+  text-align: center;
+}
+
+/* ===== БАЗОВЫЕ КНОПКИ ===== */
+.btn {
+  display: block;
+  width: 100%;
+  padding: 15px 20px;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, transform 0.1s;
+  text-align: center;
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
+
+/* Акцентная кнопка (жёлто-оранжевая) */
+.btn-accent {
+  background: linear-gradient(135deg, #f6ad55, #ed8936);
+  color: #fff;
+  border: none;
+}
+
+.btn-accent:hover,
+.btn-accent:focus {
+  background: linear-gradient(135deg, #ed8936, #dd6b20);
+  outline: none;
+}
+
+/* Нейтральная кнопка */
+.btn-neutral {
+  background: #edf2f7;
+  color: #4a5568;
+  border: 2px solid #e2e8f0;
+}
+
+.btn-neutral:hover,
+.btn-neutral:focus {
+  background: #e2e8f0;
+  border-color: #cbd5e0;
+  outline: none;
+}
+
+/* Outline кнопка */
+.btn-outline {
+  background: #fff;
+  color: #975a16;
+  border: 2px solid #f6ad55;
+}
+
+.btn-outline:hover,
+.btn-outline:focus {
+  border-color: #ed8936;
+  background: #fffbeb;
+  outline: none;
+}
+
+/* Большая кнопка */
+.btn-large {
+  font-size: 1.15rem;
+  padding: 18px 28px;
+  min-width: 200px;
+  width: auto;
+}
+
+/* ===== ЭКРАН ИТОГОВ ===== */
+.result-title {
+  font-size: 1.55rem;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 16px;
+  color: #744210;
+}
+
+.results-ace-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0;
+  margin-bottom: 18px;
+}
+
+.results-ace-row .ace-bubble {
+  max-width: 280px;
+}
+
+.result-points {
+  font-size: 2rem;
+  font-weight: 700;
+  text-align: center;
+  color: #f6ad55;
+  margin-bottom: 8px;
+}
+
+.result-streak {
+  text-align: center;
+  font-size: 0.95rem;
+  color: #c05621;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+/* Строка звёзд блока */
+.result-stars-row {
+  text-align: center;
+  font-size: 1rem;
+  margin-bottom: 14px;
+  color: #744210;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.stars-label {
+  font-weight: 600;
+}
+
+.stars-arrow {
+  color: #a0aec0;
+  font-size: 0.9rem;
+}
+
+/* Анимация появления новой звезды */
+.stars-new .star-filled {
+  animation: star-pop 0.5s ease-out;
+  display: inline-block;
+}
+
+@keyframes star-pop {
+  0%   { transform: scale(0); opacity: 0; }
+  60%  { transform: scale(1.4); opacity: 1; }
+  100% { transform: scale(1); }
+}
+
+/* Полоса звания в итогах */
+.result-rank-progress {
+  margin-bottom: 24px;
+}
+
+.result-rank-progress .rank-bar-outer {
+  background: #fde9c0;
+  border-radius: 6px;
+  height: 8px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+
+.result-rank-progress .rank-bar-inner {
+  height: 100%;
+  background: linear-gradient(90deg, #f6ad55, #ed8936);
+  border-radius: 6px;
+  transition: width 0.5s ease;
+}
+
+.result-rank-progress .rank-progress-text {
+  text-align: center;
+  font-size: 0.82rem;
+  color: #975a16;
+}
+
+/* Кнопки итогов */
+.result-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ===== АДАПТИВНОСТЬ ===== */
+@media (max-width: 400px) {
+  body {
+    padding: 10px;
+  }
+
+  h1 {
+    font-size: 1.35rem;
+  }
+
+  .ace-big {
+    font-size: 2.8rem;
+  }
+
+  .question-text {
+    font-size: 0.97rem;
+  }
+
+  .btn-option {
+    padding: 12px 14px;
+    font-size: 0.9rem;
+  }
+
+  .btn {
+    padding: 13px 18px;
+    font-size: 0.95rem;
+  }
+
+  .result-points {
+    font-size: 1.6rem;
+  }
+
+  .result-title {
+    font-size: 1.3rem;
+  }
+}

@@ -3,50 +3,131 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Теннисный тренажёр — игровое мышление</title>
+  <title>Академия тенниса</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header>
-    <h1>🎾 Теннисный тренажёр</h1>
-    <p class="subtitle">Игровое мышление: 116 ситуаций от первого лица</p>
-  </header>
 
-  <!-- Экран меню: выбор блока вопросов -->
-  <main id="menu-screen">
-    <h2>Выберите тему</h2>
-    <div id="block-list"></div>
-  </main>
+  <!-- ===== КОНФЕТТИ (поверх всего) ===== -->
+  <div id="confetti-layer" class="confetti-layer"></div>
 
-  <!-- Экран вопроса -->
-  <main id="quiz-screen" hidden>
-    <div class="quiz-top">
-      <button id="quit-btn" type="button">← В меню</button>
-      <span id="progress"></span>
-      <span id="score"></span>
+  <!-- ===== ЭКРАН 1: ОНБОРДИНГ ===== -->
+  <div id="screen-onboarding" class="screen hidden">
+    <div class="onboarding-wrap">
+      <div class="ace-big ace-wobble" id="ace-onboarding">🎾</div>
+      <div class="ace-bubble" id="ace-onboarding-bubble"></div>
+      <button id="btn-start-onboarding" class="btn btn-accent btn-large">Поехали! 🎾</button>
     </div>
-    <div class="meta">
-      <span id="q-block" class="badge"></span>
-      <span id="q-difficulty" class="badge"></span>
-      <span id="q-phase" class="badge"></span>
-    </div>
-    <p id="q-text"></p>
-    <div id="options"></div>
-    <div id="feedback" hidden>
-      <p id="verdict"></p>
-      <p id="explanation"></p>
-      <button id="next-btn" type="button">Дальше →</button>
-    </div>
-  </main>
+  </div>
 
-  <!-- Экран результата -->
-  <main id="result-screen" hidden>
-    <h2 id="result-title"></h2>
-    <p id="result-text"></p>
-    <button id="retry-mistakes-btn" type="button" hidden>Повторить ошибки</button>
-    <button id="to-menu-btn" type="button">В меню</button>
-  </main>
+  <!-- ===== ЭКРАН 2: МЕНЮ ===== -->
+  <div id="screen-menu" class="screen hidden">
 
+    <!-- Шапка: заголовок, Эйс, звание -->
+    <h1>Академия тенниса</h1>
+
+    <div class="menu-ace-row">
+      <div class="ace-big ace-wobble">🎾</div>
+      <div class="ace-bubble" id="ace-menu-bubble"></div>
+    </div>
+
+    <div id="rank-line" class="rank-line">
+      <span id="rank-label" class="rank-label"></span>
+    </div>
+    <div class="rank-progress-wrap">
+      <div id="rank-progress-bar" class="rank-progress-bar"></div>
+    </div>
+    <p id="rank-progress-text" class="rank-progress-text"></p>
+
+    <!-- Тренировка дня -->
+    <button id="btn-daily" class="btn btn-accent btn-daily">⚡ Тренировка дня</button>
+
+    <!-- Секции блоков -->
+    <div id="section-court" class="menu-section">
+      <h2 class="section-title">🏟 Основной корт</h2>
+      <div class="section-cards" id="cards-court"></div>
+    </div>
+
+    <div id="section-review" class="menu-section">
+      <h2 class="section-title">🎬 Разбор матчей</h2>
+      <div class="section-cards" id="cards-review"></div>
+    </div>
+
+    <div id="section-courses" class="menu-section">
+      <h2 class="section-title">🎓 Спецкурсы</h2>
+      <div class="section-cards" id="cards-courses"></div>
+    </div>
+
+  </div>
+
+  <!-- ===== ЭКРАН 3: ВОПРОС ===== -->
+  <div id="screen-question" class="screen hidden">
+
+    <!-- Точки-шаги и счётчик -->
+    <div id="step-dots" class="step-dots"></div>
+    <div id="game-counter" class="game-counter"></div>
+
+    <!-- Плашки ставки и серии -->
+    <div class="badges-row">
+      <span id="stake-badge" class="stake-badge"></span>
+      <span id="streak-badge" class="streak-badge hidden">🔥 Серия ×2!</span>
+    </div>
+
+    <!-- Текст вопроса -->
+    <div class="question-text-wrap">
+      <p id="q-text" class="question-text"></p>
+    </div>
+
+    <!-- Варианты ответов -->
+    <div id="options-list" class="options-list"></div>
+
+    <!-- Объяснение (Эйс объясняет) -->
+    <div id="explanation-wrap" class="explanation hidden">
+      <div class="ace-inline">🎾</div>
+      <div class="explanation-body">
+        <p id="ace-reaction" class="ace-reaction"></p>
+        <p class="explanation-label">🎾 Эйс объясняет:</p>
+        <p id="explanation-text" class="explanation-text"></p>
+      </div>
+    </div>
+
+    <!-- Кнопка «Дальше» -->
+    <div id="next-btn-wrap" class="next-btn-wrap hidden">
+      <button id="btn-next" class="btn btn-accent">Дальше →</button>
+    </div>
+
+  </div>
+
+  <!-- ===== ЭКРАН 4: ИТОГИ ===== -->
+  <div id="screen-results" class="screen hidden">
+
+    <h2 id="result-title" class="result-title"></h2>
+
+    <div class="results-ace-row">
+      <div class="ace-big ace-wobble" id="ace-results">🎾</div>
+      <div class="ace-bubble" id="ace-results-bubble"></div>
+    </div>
+
+    <p id="result-points" class="result-points"></p>
+    <p id="result-streak" class="result-streak hidden"></p>
+
+    <!-- Звёзды блока (только для block-режима) -->
+    <div id="result-stars-row" class="result-stars-row hidden"></div>
+
+    <!-- Полоса звания -->
+    <div id="result-rank-progress" class="result-rank-progress"></div>
+
+    <div class="result-buttons">
+      <button id="btn-again" class="btn btn-accent">Ещё один гейм! ⚡</button>
+      <button id="btn-review-mistakes" class="btn btn-neutral hidden">
+        🎾 Разобрать ошибки (<span id="mistakes-count">0</span>)
+      </button>
+      <button id="btn-academy" class="btn btn-outline">В Академию</button>
+    </div>
+
+  </div>
+
+  <!-- Данные подключаются ДО логики -->
   <script src="questions.js"></script>
   <script src="app.js"></script>
 </body>
