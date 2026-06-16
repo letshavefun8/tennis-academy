@@ -250,6 +250,7 @@ var elBtnWallBack         = document.getElementById('btn-wall-back');
 
 // Кнопка выхода из аккаунта
 var elBtnLogout           = document.getElementById('btn-logout');
+var elBtnGuestLogin       = document.getElementById('btn-guest-login');
 
 // Табы экрана регистрации / входа
 var elAuthTabRegister     = document.getElementById('auth-tab-register');
@@ -1057,11 +1058,19 @@ function buildMenu() {
   buildSectionCards('review',  document.getElementById('cards-review'));
   buildSectionCards('courses', document.getElementById('cards-courses'));
 
-  // Показываем кнопку выхода только если есть аккаунт
+  // Есть аккаунт → кнопка «Выйти»; гость при настроенном облаке →
+  // кнопка «Войти или зарегистрироваться» (без облака регистрация невозможна).
+  var cloudConfigured = (typeof FIREBASE_CONFIG !== 'undefined' && FIREBASE_CONFIG !== null);
   if (acct) {
     elBtnLogout.classList.remove('hidden');
+    elBtnGuestLogin.classList.add('hidden');
   } else {
     elBtnLogout.classList.add('hidden');
+    if (cloudConfigured) {
+      elBtnGuestLogin.classList.remove('hidden');
+    } else {
+      elBtnGuestLogin.classList.add('hidden');
+    }
   }
 }
 
@@ -1847,6 +1856,13 @@ elBtnLogout.addEventListener('click', function() {
   cloudSignOut().then(function() {
     showAuthScreen('login');
   });
+});
+
+// Гость нажимает «Войти или зарегистрироваться» — ведём на экран auth.
+// По умолчанию вкладка регистрации (локальный прогресс мигрирует в новый
+// аккаунт), но на экране можно переключиться на вход.
+elBtnGuestLogin.addEventListener('click', function() {
+  showAuthScreen('register');
 });
 
 // =====================================================

@@ -1322,3 +1322,14 @@ h1 {
 .btn-logout:active {
   transform: scale(0.98);
 }
+
+/* Кнопка входа/регистрации для гостя — приветливее обычного «Выйти» */
+.btn-guest-login {
+  border-color: #f6ad55;
+  color: #975a16;
+}
+
+.btn-guest-login:hover,
+.btn-guest-login:focus {
+  background: #fffbeb;
+}
