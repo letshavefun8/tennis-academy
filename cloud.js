@@ -305,6 +305,31 @@ function cloudWaitForAuth() {
 // РЕГИСТРАЦИЯ
 // =====================================================
 
+// Базовый стоп-лист имён — отсев очевидно недопустимых имён на регистрации.
+// Имя ребёнка публично на Стене и в рейтинге, поэтому грубый фильтр нужен.
+// Список намеренно короткий; при необходимости расширьте.
+var NAME_STOPLIST = [
+  'admin', 'администратор', 'модератор', 'moderator',
+  'хуй', 'хер', 'залупа', 'пизд', 'бля', 'сука', 'suka',
+  'еба', 'ебл', 'ёба', 'муд', 'гандон', 'пидор', 'pidor', 'ублюд',
+  'fuck', 'shit', 'bitch', 'nigger', 'dick', 'cunt'
+];
+
+/**
+ * Проверяет имя по стоп-листу. Сверяет и кириллический lower-вариант,
+ * и транслитерированный (латинский) — чтобы ловить оба написания.
+ * Возвращает true, если имя допустимо.
+ */
+function isNameClean(name) {
+  var lower = String(name).trim().toLowerCase().replace(/ё/g, 'е');
+  var latin = nameToEmailLocalPart(name);
+  for (var i = 0; i < NAME_STOPLIST.length; i++) {
+    var w = NAME_STOPLIST[i];
+    if (lower.indexOf(w) !== -1 || latin.indexOf(w) !== -1) return false;
+  }
+  return true;
+}
+
 /**
  * Регистрирует нового игрока через Firebase Email/Password.
  * email = buildSyntheticEmail(name), password = padPin(pin).
@@ -327,6 +352,9 @@ function cloudRegister(name, pin) {
   var trimmedName = String(name).trim();
   if (trimmedName.length < 1 || trimmedName.length > 20) {
     return Promise.resolve({ ok: false, error: 'Имя должно быть от 1 до 20 символов' });
+  }
+  if (!isNameClean(trimmedName)) {
+    return Promise.resolve({ ok: false, error: 'Это имя нельзя использовать. Выбери другое 🎾' });
   }
 
   // Валидация ПИН — только 4 цифры
