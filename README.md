@@ -187,7 +187,9 @@ firebase deploy --only firestore:rules
 - **ПИН не восстанавливается** (by design): если забыл — заведи новый аккаунт.
 - **pinHash в Firestore больше не хранится**: переход на Firebase Auth, хранение хеша паролей на стороне Firebase.
 - **Защита от перебора**: Firebase возвращает `auth/too-many-requests` при частых неудачных попытках; дополнительно клиент блокирует кнопку входа на 30 секунд после 5 неудач.
-- **Предусловие**: в Firebase Console должен быть включён провайдер **Email/Password** (Authentication → Sign-in method).
+- **App Check (reCAPTCHA v3)**: проверяет, что запросы идут из настоящего приложения, блокируя скриптовый доступ к Firestore/Auth. Site Key — в `firebase-config.js` (`APPCHECK_SITE_KEY`). На localhost используется debug-токен. Enforcement включается в консоли (App Check → Firestore/Authentication) после деплоя кода.
+- **Валидация в правилах**: `firestore.rules` ограничивают типы/размеры полей и набор полей ленты (анти-спам).
+- **Предусловие**: в Firebase Console включены провайдер **Email/Password** (Authentication → Sign-in method) и **App Check** с reCAPTCHA v3.
 
 ### Честные ограничения безопасности
 

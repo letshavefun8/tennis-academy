@@ -18,3 +18,7 @@ var FIREBASE_CONFIG = {
   appId:             '1:178683216930:web:2262ac0aab0477377e767b',
   measurementId:     'G-V2Q707D4SL'
 };
+
+// Site Key reCAPTCHA v3 для Firebase App Check (публичный, не секрет).
+// null = App Check выключен (игра работает, но без защиты от ботов).
+var APPCHECK_SITE_KEY = '6LcwPiItAAAAAL4MOa9SoZVjqFaFutunHr6cbh8M';

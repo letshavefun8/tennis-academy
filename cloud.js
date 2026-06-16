@@ -256,6 +256,24 @@ function cloudInit() {
       app = firebase.apps[0];
     }
 
+    // App Check (reCAPTCHA v3) — защита от ботов: проверяет, что запросы
+    // идут из настоящего приложения. Активируем до Auth/Firestore, чтобы
+    // токен прикреплялся к запросам. Без ключа/SDK — тихо пропускаем.
+    try {
+      if (typeof APPCHECK_SITE_KEY !== 'undefined' && APPCHECK_SITE_KEY &&
+          typeof firebase.appCheck === 'function') {
+        // На локальной разработке используем debug-токен (в консоли
+        // App Check → Manage debug tokens зарегистрируй выведенный токен).
+        if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+          self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
+        }
+        firebase.appCheck().activate(APPCHECK_SITE_KEY, true);
+        console.log('tennisAcademy: App Check активирован');
+      }
+    } catch (acErr) {
+      console.warn('tennisAcademy: App Check не активирован', acErr);
+    }
+
     firebaseAuth = firebase.auth();
     firebaseDb   = firebase.firestore();
 
