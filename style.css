@@ -927,3 +927,323 @@ h1 {
   75%  { transform: translateX(-50%) translateY(0);     opacity: 1; }
   100% { transform: translateX(-50%) translateY(-80px); opacity: 0; }
 }
+
+/* ===== ЭКРАН РЕГИСТРАЦИИ (AUTH) ===== */
+.auth-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  padding-top: 40px;
+  text-align: center;
+}
+
+/* Пузырь Эйса на auth-экране — без хвостика, шире */
+.auth-bubble {
+  margin-left: 0;
+  max-width: 340px;
+  font-size: 1.05rem;
+  text-align: center;
+}
+
+.auth-bubble::before,
+.auth-bubble::after {
+  display: none;
+}
+
+/* Форма регистрации */
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 360px;
+  text-align: left;
+}
+
+.auth-label {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #975a16;
+  margin-bottom: 2px;
+}
+
+/* Крупные поля ввода */
+.auth-input {
+  display: block;
+  width: 100%;
+  padding: 16px 18px;
+  font-size: 1.1rem;
+  border: 2px solid #fde9c0;
+  border-radius: 12px;
+  background: #fff;
+  color: #2d3748;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.auth-input:focus {
+  border-color: #f6ad55;
+}
+
+.auth-hint {
+  font-size: 0.78rem;
+  color: #a0aec0;
+  margin-top: -4px;
+}
+
+.auth-error {
+  font-size: 0.88rem;
+  color: #e53e3e;
+  font-weight: 600;
+  padding: 8px 12px;
+  background: #fff5f5;
+  border: 1px solid #feb2b2;
+  border-radius: 8px;
+}
+
+.auth-submit-btn {
+  margin-top: 8px;
+  font-size: 1.15rem;
+  padding: 18px 28px;
+}
+
+/* ===== МЕНЮ: ДВЕ КНОПКИ В РЯД ===== */
+.menu-top-buttons {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.menu-top-buttons .btn {
+  flex: 1;
+  font-size: 0.9rem;
+  padding: 13px 10px;
+}
+
+/* ===== ПРОФИЛЬ: ПОЛКА 17 ЗНАЧКОВ БЛОКОВ ===== */
+.blocks-shelf {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+/* Ячейка значка блока */
+.block-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 8px;
+  border-radius: 12px;
+  border: 2px solid #fde9c0;
+  background: #fff;
+  text-align: center;
+  cursor: default;
+  transition: border-color 0.15s;
+}
+
+/* Горящий значок — блок с 3 звёздами */
+.block-badge-lit {
+  border-color: #f6ad55;
+  background: #fffbeb;
+}
+
+/* Потухший значок — блок ещё не на ★★★ */
+.block-badge-dim {
+  opacity: 0.55;
+  filter: grayscale(50%);
+}
+
+.block-badge-emoji {
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+.block-badge-name {
+  font-size: 0.72rem;
+  color: #975a16;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.block-badge-dim .block-badge-name {
+  color: #a0aec0;
+}
+
+.block-badge-stars {
+  font-size: 0.75rem;
+  letter-spacing: 1px;
+}
+
+/* Счётчик «Дней тренировок» в профиле */
+.hall-stat span:first-child {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #f6ad55;
+}
+
+/* Метка «только чтение» под заголовком профиля */
+.hall-readonly-label {
+  text-align: center;
+  font-size: 0.82rem;
+  color: #a0aec0;
+  margin-bottom: 8px;
+}
+
+/* ===== СТЕНА АКАДЕМИИ ===== */
+.wall-title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  text-align: center;
+  color: #744210;
+  margin-bottom: 20px;
+}
+
+.wall-section {
+  margin-bottom: 28px;
+}
+
+.wall-section-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #975a16;
+  margin-bottom: 12px;
+  padding-bottom: 4px;
+  border-bottom: 2px solid #fde9c0;
+}
+
+.wall-loading {
+  font-size: 0.9rem;
+  color: #a0aec0;
+  text-align: center;
+  padding: 16px 0;
+}
+
+.wall-empty {
+  font-size: 0.9rem;
+  color: #a0aec0;
+  text-align: center;
+  padding: 16px 0;
+}
+
+/* Таблица недельного рейтинга */
+.leaderboard-wrap {
+  overflow-x: auto;
+}
+
+.leaderboard-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+
+.leaderboard-table thead th {
+  text-align: left;
+  font-weight: 700;
+  color: #975a16;
+  padding: 6px 10px;
+  border-bottom: 2px solid #fde9c0;
+  white-space: nowrap;
+}
+
+.leaderboard-table tbody td {
+  padding: 9px 10px;
+  border-bottom: 1px solid #fef3c7;
+  color: #2d3748;
+}
+
+/* Топ-3 строки в рейтинге */
+.leaderboard-table tr.lb-first td  { background: #fffbeb; font-weight: 700; }
+.leaderboard-table tr.lb-second td { background: #f7fafc; }
+.leaderboard-table tr.lb-third td  { background: #f7fafc; }
+
+.lb-pos {
+  font-size: 1.05rem;
+  width: 38px;
+  text-align: center;
+}
+
+.lb-name {
+  flex: 1;
+}
+
+.lb-pts {
+  font-weight: 700;
+  color: #f6ad55;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* Кликабельное имя в рейтинге и ленте */
+.player-link {
+  color: #744210;
+  text-decoration: underline;
+  text-decoration-color: #f6ad55;
+  cursor: pointer;
+  font-weight: 600;
+  text-underline-offset: 2px;
+}
+
+.player-link:hover {
+  color: #c05621;
+}
+
+/* Карточки событий ленты */
+.feed-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.feed-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: #fff;
+  border: 1px solid #fde9c0;
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+
+.feed-emoji {
+  font-size: 1.5rem;
+  line-height: 1;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.feed-body {
+  flex: 1;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: #4a5568;
+}
+
+.feed-name {
+  /* стили берёт .player-link */
+}
+
+.feed-text {
+  color: #4a5568;
+}
+
+.feed-date {
+  display: block;
+  font-size: 0.75rem;
+  color: #a0aec0;
+  margin-top: 2px;
+}
+
+/* ===== АДАПТИВНОСТЬ: маленький экран — 2 колонки для полки блоков ===== */
+@media (max-width: 400px) {
+  .blocks-shelf {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .menu-top-buttons .btn {
+    font-size: 0.8rem;
+    padding: 11px 8px;
+  }
+}

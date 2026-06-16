@@ -1,0 +1,28 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===== ИГРОКИ =====
+    // Читать профиль может любой аутентифицированный пользователь.
+    // Писать в свой документ может только его владелец (uid совпадает).
+    match /players/{uid} {
+      allow read:          if request.auth != null;
+      allow create, update: if request.auth != null && request.auth.uid == uid;
+      // delete намеренно запрещён — защита от случайной или злонамеренной потери данных
+    }
+
+    // ===== ЛЕНТА СОБЫТИЙ (СТЕНА) =====
+    // Читать может любой аутентифицированный.
+    // Создавать можно только со своим uid в поле uid документа.
+    // Редактировать и удалять нельзя.
+    match /feed/{eventId} {
+      allow read:   if request.auth != null;
+      allow create: if request.auth != null
+                    && request.resource.data.uid == request.auth.uid;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+  }
+}

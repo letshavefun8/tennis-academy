@@ -11,6 +11,33 @@
   <!-- ===== КОНФЕТТИ (поверх всего) ===== -->
   <div id="confetti-layer" class="confetti-layer"></div>
 
+  <!-- ===== ЭКРАН AUTH: РЕГИСТРАЦИЯ ===== -->
+  <div id="screen-auth" class="screen hidden">
+    <div class="auth-wrap">
+      <div class="ace-big ace-wobble">🎾</div>
+      <div class="ace-bubble auth-bubble" id="ace-auth-bubble">
+        Привет! Я Эйс. Добро пожаловать в Академию! Как тебя зовут?
+      </div>
+      <div class="auth-form">
+        <label class="auth-label" for="auth-name">Твоё имя (1–20 символов)</label>
+        <input id="auth-name" class="auth-input" type="text"
+               placeholder="Например: Артём" maxlength="20" autocomplete="off" />
+
+        <label class="auth-label" for="auth-pin">ПИН-код (4 цифры)</label>
+        <input id="auth-pin" class="auth-input" type="password"
+               inputmode="numeric" maxlength="4" placeholder="••••" autocomplete="off" />
+
+        <p class="auth-hint">ПИН — твой секретный код. Он пригодится, когда появится вход с других устройств 🔒</p>
+        <p id="auth-error" class="auth-error hidden"></p>
+
+        <button id="btn-auth-submit" class="btn btn-accent btn-large auth-submit-btn">
+          В Академию! 🎾
+        </button>
+        <button id="btn-auth-skip" class="btn-skip">Сначала попробую без регистрации →</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ===== ЭКРАН 1: ОНБОРДИНГ ===== -->
   <div id="screen-onboarding" class="screen hidden">
     <div class="onboarding-wrap">
@@ -25,7 +52,7 @@
   <div id="screen-menu" class="screen hidden">
 
     <!-- Шапка: заголовок, Эйс, звание -->
-    <h1>Академия тенниса</h1>
+    <h1 id="menu-player-name">Академия тенниса</h1>
 
     <div class="menu-ace-row">
       <div class="ace-big ace-wobble">🎾</div>
@@ -40,8 +67,11 @@
     </div>
     <p id="rank-progress-text" class="rank-progress-text"></p>
 
-    <!-- Зал славы -->
-    <button id="btn-hall" class="btn btn-outline btn-hall">🏆 Зал славы</button>
+    <!-- Кнопки: Профиль и Стена академии -->
+    <div class="menu-top-buttons">
+      <button id="btn-hall" class="btn btn-outline btn-hall">🏆 Профиль</button>
+      <button id="btn-wall" class="btn btn-outline btn-wall">📣 Стена академии</button>
+    </div>
 
     <!-- Тренировка дня -->
     <button id="btn-daily" class="btn btn-accent btn-daily">⚡ Тренировка дня</button>
@@ -137,26 +167,84 @@
 
   </div>
 
-  <!-- ===== ЭКРАН 5: ЗАЛ СЛАВЫ ===== -->
+  <!-- ===== ЭКРАН 5: ПРОФИЛЬ (бывший «Зал славы») ===== -->
   <div id="screen-hall" class="screen hidden">
     <div class="question-topbar">
       <button id="btn-hall-back" class="btn-exit">← В Академию</button>
     </div>
-    <h2 class="hall-title">🏆 Зал славы</h2>
+
+    <!-- Заголовок с именем игрока -->
+    <h2 class="hall-title" id="hall-player-name">🏆 Профиль</h2>
+    <p class="hall-readonly-label hidden" id="hall-readonly-label">Профиль другого игрока (только чтение)</p>
+
+    <!-- Звание -->
     <div class="hall-rank" id="hall-rank"></div>
+
+    <!-- Основные статы -->
     <div class="hall-stats">
-      <div class="hall-stat"><span id="hall-points"></span><span class="hall-stat-label">всего мячей</span></div>
-      <div class="hall-stat"><span id="hall-best-streak"></span><span class="hall-stat-label">рекордная серия</span></div>
+      <div class="hall-stat">
+        <span id="hall-points"></span>
+        <span class="hall-stat-label">всего мячей</span>
+      </div>
+      <div class="hall-stat">
+        <span id="hall-best-streak"></span>
+        <span class="hall-stat-label">рекордная серия</span>
+      </div>
+      <div class="hall-stat">
+        <span id="hall-days-count"></span>
+        <span class="hall-stat-label">дней тренировок</span>
+      </div>
     </div>
+
+    <!-- Полка 17 значков блоков -->
+    <p class="hall-shelf-title" id="hall-blocks-title">Значки блоков</p>
+    <div id="blocks-shelf" class="blocks-shelf"></div>
+
+    <!-- Старые 5 наград (BADGES) -->
     <p class="hall-shelf-title" id="hall-shelf-title"></p>
     <div id="badges-shelf" class="badges-shelf"></div>
+  </div>
+
+  <!-- ===== ЭКРАН 6: СТЕНА АКАДЕМИИ ===== -->
+  <div id="screen-wall" class="screen hidden">
+    <div class="question-topbar">
+      <button id="btn-wall-back" class="btn-exit">← В Академию</button>
+    </div>
+    <h2 class="wall-title">📣 Стена академии</h2>
+
+    <!-- Недельный рейтинг -->
+    <div class="wall-section">
+      <h3 class="wall-section-title">🏅 Недельный рейтинг</h3>
+      <div id="leaderboard-wrap" class="leaderboard-wrap">
+        <p class="wall-loading">Загружаем рейтинг...</p>
+      </div>
+    </div>
+
+    <!-- Лента событий -->
+    <div class="wall-section">
+      <h3 class="wall-section-title">🎾 Лента событий</h3>
+      <div id="feed-wrap" class="feed-wrap">
+        <p class="wall-loading">Загружаем события...</p>
+      </div>
+    </div>
   </div>
 
   <!-- Тост для значков -->
   <div id="badge-toast" class="badge-toast hidden"></div>
 
-  <!-- Данные подключаются ДО логики -->
+  <!-- ===== СКРИПТЫ: данные и Firebase — ДО app.js ===== -->
+  <!-- Firebase compat SDK (версия 10.x) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+  <!-- Конфигурация Firebase (null = заглушка) -->
+  <script src="firebase-config.js"></script>
+  <!-- Сетевой слой -->
+  <script src="cloud.js"></script>
+  <!-- Данные вопросов -->
   <script src="questions.js"></script>
+  <!-- Логика приложения -->
   <script src="app.js"></script>
 </body>
 </html>
