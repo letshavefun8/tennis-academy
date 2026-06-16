@@ -17,6 +17,82 @@ var cloudReady = false;
 var firebaseAuth = null;
 var firebaseDb   = null;
 
+// Промис готовности авторизации (резолвится первым onAuthStateChanged)
+var _authReadyPromise = null;
+var _authReadyResolve = null;
+// Флаг: первое срабатывание onAuthStateChanged уже было
+var _authResolvedOnce = false;
+
+// =====================================================
+// ТРАНСЛИТЕРАЦИЯ И ПОСТРОЕНИЕ СИНТЕТИЧЕСКОГО EMAIL
+// =====================================================
+
+/**
+ * Таблица транслитерации кириллицы → латиница.
+ * Все буквы нижнего регистра (вход уже приведён к нижнему).
+ */
+var TRANSLIT_MAP = {
+  'а': 'a',  'б': 'b',  'в': 'v',  'г': 'g',  'д': 'd',
+  'е': 'e',  'ж': 'zh', 'з': 'z',  'и': 'i',  'й': 'y',
+  'к': 'k',  'л': 'l',  'м': 'm',  'н': 'n',  'о': 'o',
+  'п': 'p',  'р': 'r',  'с': 's',  'т': 't',  'у': 'u',
+  'ф': 'f',  'х': 'h',  'ц': 'c',  'ч': 'ch', 'ш': 'sh',
+  'щ': 'sch','ъ': '',   'ы': 'y',  'ь': '',   'э': 'e',
+  'ю': 'yu', 'я': 'ya'
+};
+
+/**
+ * Преобразует имя игрока в локальную часть синтетического email.
+ * Алгоритм: trim → lowercase → ё→е → транслитерация кириллицы →
+ *   не [a-z0-9] → '.' → схлопнуть точки → обрезать края → до 32 символов.
+ * Если результат пустой — возвращает 'user'.
+ */
+function nameToEmailLocalPart(name) {
+  var s = String(name).trim().toLowerCase();
+  // ё → е (до транслитерации)
+  s = s.replace(/ё/g, 'е');
+
+  // Посимвольная транслитерация
+  var result = '';
+  for (var i = 0; i < s.length; i++) {
+    var ch = s[i];
+    if (TRANSLIT_MAP.hasOwnProperty(ch)) {
+      result += TRANSLIT_MAP[ch];
+    } else if (/[a-z0-9]/.test(ch)) {
+      result += ch;
+    } else {
+      result += '.';
+    }
+  }
+
+  // Схлопнуть множественные точки
+  result = result.replace(/\.{2,}/g, '.');
+  // Убрать ведущие и хвостовые точки
+  result = result.replace(/^\.+|\.+$/g, '');
+
+  // Пустой результат — заглушка
+  if (!result) result = 'user';
+
+  // Обрезать до 32 символов
+  return result.slice(0, 32);
+}
+
+/**
+ * Строит синтетический email по имени игрока.
+ * Формат: <localpart>@academy.local
+ */
+function buildSyntheticEmail(name) {
+  return nameToEmailLocalPart(name) + '@academy.local';
+}
+
+/**
+ * Строит пароль из ПИН-кода.
+ * Детерминированная функция, длина ≥ 6, не зависит от uid/имени.
+ */
+function padPin(pin) {
+  return String(pin) + 'Ac';
+}
+
 // =====================================================
 // ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
 // =====================================================
@@ -37,20 +113,6 @@ function weekKey() {
   var wk = String(week);
   if (wk.length < 2) wk = '0' + wk;
   return d.getFullYear() + '-W' + wk;
-}
-
-/**
- * Хеширует ПИН через SHA-256, соль = uid.
- * Возвращает Promise<string> (hex).
- */
-function hashPin(pin, uid) {
-  var data = uid + ':' + pin; // соль = uid
-  var encoder = new TextEncoder();
-  var buf = encoder.encode(data);
-  return crypto.subtle.digest('SHA-256', buf).then(function(hashBuf) {
-    var arr = Array.from(new Uint8Array(hashBuf));
-    return arr.map(function(b) { return ('00' + b.toString(16)).slice(-2); }).join('');
-  });
 }
 
 /**
@@ -77,6 +139,17 @@ function saveAccount(uid, name) {
     localStorage.setItem(ACCOUNT_KEY, JSON.stringify({ uid: uid, name: name }));
   } catch (e) {
     console.warn('tennisAcademy: не удалось сохранить аккаунт', e);
+  }
+}
+
+/**
+ * Удаляет аккаунт из localStorage.
+ */
+function clearAccount() {
+  try {
+    localStorage.removeItem(ACCOUNT_KEY);
+  } catch (e) {
+    console.warn('tennisAcademy: не удалось очистить аккаунт', e);
   }
 }
 
@@ -156,9 +229,11 @@ window.addEventListener('online', function() {
 // =====================================================
 
 /**
- * Инициализирует Firebase compat-SDK и выполняет анонимный вход.
- * Вызывается один раз при старте приложения.
- * Возвращает Promise<boolean> — true если успешно.
+ * Инициализирует Firebase compat-SDK.
+ * БЕЗ анонимного входа — используем Email/Password.
+ * Устанавливает onAuthStateChanged: обновляет cloudReady,
+ * досылает очередь, резолвит _authReadyPromise при первом срабатывании.
+ * Возвращает Promise<boolean> — true если Firebase сконфигурирован.
  */
 function cloudInit() {
   // Если конфига нет — работаем локально
@@ -184,17 +259,26 @@ function cloudInit() {
     firebaseAuth = firebase.auth();
     firebaseDb   = firebase.firestore();
 
-    // Анонимный вход
-    return firebaseAuth.signInAnonymously().then(function(cred) {
-      cloudReady = true;
-      console.log('tennisAcademy: Firebase готов, uid =', cred.user.uid);
-      // Досылаем возможные накопленные события
-      flushSyncQueue();
-      return true;
-    }).catch(function(err) {
-      console.warn('tennisAcademy: анонимный вход не удался', err);
-      return false;
+    // Создаём промис готовности авторизации
+    _authReadyPromise = new Promise(function(resolve) {
+      _authReadyResolve = resolve;
     });
+
+    // Единственная подписка на изменение состояния авторизации
+    firebaseAuth.onAuthStateChanged(function(user) {
+      cloudReady = !!user;
+      if (user) {
+        console.log('tennisAcademy: пользователь вошёл, uid =', user.uid);
+        flushSyncQueue();
+      }
+      // Резолвим _authReadyPromise только при первом срабатывании
+      if (!_authResolvedOnce) {
+        _authResolvedOnce = true;
+        _authReadyResolve(user || null);
+      }
+    });
+
+    return Promise.resolve(true);
 
   } catch (err) {
     console.warn('tennisAcademy: ошибка инициализации Firebase', err);
@@ -202,28 +286,42 @@ function cloudInit() {
   }
 }
 
+/**
+ * Возвращает промис, который резолвится при первом onAuthStateChanged.
+ * Результат: объект user (если залогинен) или null.
+ * При отсутствии конфига резолвится мгновенно с null.
+ */
+function cloudWaitForAuth() {
+  if (typeof FIREBASE_CONFIG === 'undefined' || FIREBASE_CONFIG === null) {
+    return Promise.resolve(null);
+  }
+  if (!_authReadyPromise) {
+    return Promise.resolve(null);
+  }
+  return _authReadyPromise;
+}
+
 // =====================================================
-// РЕГИСТРАЦИЯ / ПЕРВЫЙ ВХО
+// РЕГИСТРАЦИЯ
 // =====================================================
 
 /**
- * Создаёт документ players/{uid} в Firestore.
- * Если у игрока уже есть локальный прогресс (points > 0 или onboarded),
- * агрегаты сразу синхронизируются (миграция).
+ * Регистрирует нового игрока через Firebase Email/Password.
+ * email = buildSyntheticEmail(name), password = padPin(pin).
+ * Создаёт документ players/{uid} в Firestore с агрегатами из локального профиля.
+ * Имена глобально уникальны (нормализуются через buildSyntheticEmail).
  * name — строка 1–20 символов, pin — 4 цифры.
- * Возвращает Promise<{ok, error}>.
+ * Возвращает Promise<{ok, code?, error?}>.
  */
 function cloudRegister(name, pin) {
-  if (!cloudReady || !firebaseDb || !firebaseAuth) {
-    return Promise.resolve({ ok: false, error: 'Firebase не инициализирован' });
+  if (!cloudReady && !(firebaseAuth)) {
+    return Promise.resolve({ ok: false, code: 'no-cloud', error: 'Firebase не готов' });
   }
 
-  var user = firebaseAuth.currentUser;
-  if (!user) {
-    return Promise.resolve({ ok: false, error: 'Нет анонимного пользователя' });
+  // Проверяем конфиг
+  if (typeof FIREBASE_CONFIG === 'undefined' || FIREBASE_CONFIG === null) {
+    return Promise.resolve({ ok: false, code: 'no-cloud', error: 'Нет конфигурации Firebase' });
   }
-
-  var uid = user.uid;
 
   // Валидация имени
   var trimmedName = String(name).trim();
@@ -237,10 +335,15 @@ function cloudRegister(name, pin) {
     return Promise.resolve({ ok: false, error: 'ПИН — ровно 4 цифры' });
   }
 
-  return hashPin(pinStr, uid).then(function(pinHash) {
-    // Читаем локальный профиль для миграции
+  var email    = buildSyntheticEmail(trimmedName);
+  var password = padPin(pinStr);
+
+  return firebaseAuth.createUserWithEmailAndPassword(email, password).then(function(cred) {
+    var uid = cred.user.uid;
+
+    // Читаем локальный профиль для миграции агрегатов
     var localProfile = (typeof profile !== 'undefined') ? profile : null;
-    var pts = (localProfile && typeof localProfile.points === 'number') ? localProfile.points : 0;
+    var pts        = (localProfile && typeof localProfile.points === 'number') ? localProfile.points : 0;
     var bestStreak = (localProfile && typeof localProfile.bestStreakEver === 'number') ? localProfile.bestStreakEver : 0;
     var daysCount  = (localProfile && Array.isArray(localProfile.days)) ? localProfile.days.length : 0;
     var rankName   = (typeof getRank === 'function') ? getRank(pts).emoji + ' ' + getRank(pts).name : '';
@@ -258,28 +361,93 @@ function cloudRegister(name, pin) {
 
     var doc = {
       uid:           uid,
-      name:          trimmedName,
-      pinHash:       pinHash,
+      name:          trimmedName,   // исходное имя (не localpart), для отображения
       points:        pts,
       rankName:      rankName,
       blockStars:    blockStars,
       bestStreakEver: bestStreak,
       daysCount:     daysCount,
-      weeklyPoints:  0,   // начинаем с нуля — неделя начата с регистрации
+      weeklyPoints:  0,
       weekKey:       wk,
       createdAt:     now,
       updatedAt:     now
     };
 
     return firebaseDb.collection('players').doc(uid).set(doc).then(function() {
-      // Сохраняем аккаунт локально
       saveAccount(uid, trimmedName);
       console.log('tennisAcademy: игрок зарегистрирован', trimmedName, uid);
       return { ok: true };
     });
   }).catch(function(err) {
     console.warn('tennisAcademy: ошибка регистрации', err);
-    return { ok: false, error: err.message || 'Ошибка сервера' };
+    return { ok: false, code: err.code, error: err.message || 'Ошибка сервера' };
+  });
+}
+
+// =====================================================
+// ВХОД (со второго устройства или после очистки данных)
+// =====================================================
+
+/**
+ * Выполняет вход существующего игрока по имени и ПИН-коду.
+ * email = buildSyntheticEmail(name), password = padPin(pin).
+ * При успехе — сохраняет аккаунт локально.
+ * Возвращает Promise<{ok, uid?, code?, error?}>.
+ */
+function cloudSignIn(name, pin) {
+  // Проверяем конфиг и готовность Firebase
+  if (typeof FIREBASE_CONFIG === 'undefined' || FIREBASE_CONFIG === null) {
+    return Promise.resolve({ ok: false, code: 'no-cloud', error: 'Нет конфигурации Firebase' });
+  }
+  if (!firebaseAuth) {
+    return Promise.resolve({ ok: false, code: 'no-cloud', error: 'Firebase не инициализирован' });
+  }
+
+  // Валидация имени
+  var trimmedName = String(name).trim();
+  if (trimmedName.length < 1 || trimmedName.length > 20) {
+    return Promise.resolve({ ok: false, error: 'Имя должно быть от 1 до 20 символов' });
+  }
+
+  // Валидация ПИН
+  var pinStr = String(pin).trim();
+  if (!/^\d{4}$/.test(pinStr)) {
+    return Promise.resolve({ ok: false, error: 'ПИН — ровно 4 цифры' });
+  }
+
+  var email    = buildSyntheticEmail(trimmedName);
+  var password = padPin(pinStr);
+
+  return firebaseAuth.signInWithEmailAndPassword(email, password).then(function(cred) {
+    var uid = cred.user.uid;
+    saveAccount(uid, trimmedName);
+    console.log('tennisAcademy: вход выполнен', trimmedName, uid);
+    return { ok: true, uid: uid };
+  }).catch(function(err) {
+    console.warn('tennisAcademy: ошибка входа', err);
+    return { ok: false, code: err.code, error: err.message || 'Ошибка входа' };
+  });
+}
+
+// =====================================================
+// ВЫХОД
+// =====================================================
+
+/**
+ * Выполняет выход из аккаунта Firebase и очищает локальный аккаунт.
+ * Возвращает Promise.
+ */
+function cloudSignOut() {
+  if (!firebaseAuth) {
+    clearAccount();
+    return Promise.resolve();
+  }
+  return firebaseAuth.signOut().then(function() {
+    clearAccount();
+    console.log('tennisAcademy: выход из аккаунта');
+  }).catch(function(err) {
+    console.warn('tennisAcademy: ошибка выхода', err);
+    clearAccount();
   });
 }
 

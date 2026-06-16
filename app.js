@@ -248,6 +248,21 @@ var elHallScreen          = document.getElementById('screen-hall');
 var elBtnWall             = document.getElementById('btn-wall');
 var elBtnWallBack         = document.getElementById('btn-wall-back');
 
+// Кнопка выхода из аккаунта
+var elBtnLogout           = document.getElementById('btn-logout');
+
+// Табы экрана регистрации / входа
+var elAuthTabRegister     = document.getElementById('auth-tab-register');
+var elAuthTabLogin        = document.getElementById('auth-tab-login');
+var elAuthFormRegister    = document.getElementById('auth-form-register');
+var elAuthFormLogin       = document.getElementById('auth-form-login');
+
+// Поля и элементы формы входа
+var elLoginName           = document.getElementById('login-name');
+var elLoginPin            = document.getElementById('login-pin');
+var elLoginError          = document.getElementById('login-error');
+var elBtnLoginSubmit      = document.getElementById('btn-login-submit');
+
 // Тост для значков
 var elBadgeToast          = document.getElementById('badge-toast');
 
@@ -1041,6 +1056,13 @@ function buildMenu() {
   buildSectionCards('court',   document.getElementById('cards-court'));
   buildSectionCards('review',  document.getElementById('cards-review'));
   buildSectionCards('courses', document.getElementById('cards-courses'));
+
+  // Показываем кнопку выхода только если есть аккаунт
+  if (acct) {
+    elBtnLogout.classList.remove('hidden');
+  } else {
+    elBtnLogout.classList.add('hidden');
+  }
 }
 
 /** Рендерит полосу прогресса звания в шапке меню */
@@ -1436,6 +1458,12 @@ function renderFeed(container, events) {
  * Загружает данные из облака и показывает экран Hall.
  */
 function openPlayerProfile(uid) {
+  // Уходим со Стены — отписываемся от live-ленты, чтобы не текла подписка
+  if (feedUnsubscribe) {
+    feedUnsubscribe();
+    feedUnsubscribe = null;
+  }
+
   // Проверяем: если это свой uid — показываем локальный профиль
   var acct = loadAccount();
   if (acct && acct.uid === uid) {
@@ -1456,22 +1484,151 @@ function openPlayerProfile(uid) {
 }
 
 // =====================================================
-// ЭКРАН AUTH: РЕГИСТРАЦИЯ
+// ЭКРАН AUTH: РЕГИСТРАЦИЯ / ВХОД
 // =====================================================
 
-/** Показывает экран регистрации */
-function showAuthScreen() {
-  document.getElementById('ace-auth-bubble').textContent =
-    'Привет! Я Эйс. Добро пожаловать в Академию тенниса! Как тебя зовут? 🎾';
-  var errEl = document.getElementById('auth-error');
-  errEl.textContent = '';
-  errEl.classList.add('hidden');
+/**
+ * Показывает экран аутентификации в нужном режиме.
+ * mode: 'register' (по умолчанию) | 'login'
+ */
+function showAuthScreen(mode) {
+  var isLogin = (mode === 'login');
+
+  // Переключаем видимость форм и активность табов
+  if (isLogin) {
+    elAuthFormRegister.classList.add('hidden');
+    elAuthFormLogin.classList.remove('hidden');
+    elAuthTabLogin.classList.add('auth-tab-active');
+    elAuthTabRegister.classList.remove('auth-tab-active');
+    document.getElementById('ace-auth-bubble').textContent =
+      'С возвращением! Введи своё имя и ПИН — и сразу на корт! 🎾';
+  } else {
+    elAuthFormLogin.classList.add('hidden');
+    elAuthFormRegister.classList.remove('hidden');
+    elAuthTabRegister.classList.add('auth-tab-active');
+    elAuthTabLogin.classList.remove('auth-tab-active');
+    document.getElementById('ace-auth-bubble').textContent =
+      'Привет! Я Эйс. Давай заведём твой аккаунт — придумай имя и секретный ПИН! 🎾';
+  }
+
+  // Очищаем поля и ошибки формы регистрации
+  var regErr = document.getElementById('auth-error');
+  regErr.textContent = '';
+  regErr.classList.add('hidden');
   document.getElementById('auth-name').value = '';
   document.getElementById('auth-pin').value = '';
+
+  // Очищаем поля и ошибки формы входа
+  elLoginError.textContent = '';
+  elLoginError.classList.add('hidden');
+  elLoginName.value = '';
+  elLoginPin.value = '';
+
   showScreen('auth');
 }
 
-/** Обработчик кнопки «В Академию!» на экране регистрации */
+// Счётчик неудачных попыток входа (защита от перебора на клиенте)
+var loginAttempts = 0;
+var loginLockTimer = null;
+
+/**
+ * Возвращает мягкую реплику Эйса по коду ошибки Firebase Auth.
+ */
+function mapAuthError(code) {
+  switch (code) {
+    case 'auth/email-already-in-use':
+      return 'Ой, это имя уже занято! Попробуй другое или войди во вкладке «У меня есть аккаунт» 🎾';
+    case 'auth/user-not-found':
+      return 'Не нашёл такого игрока. Проверь имя — или заведи новый аккаунт 🌟';
+    case 'auth/wrong-password':
+      return 'ПИН не подошёл. Попробуй ещё раз 🔑';
+    case 'auth/invalid-credential':
+      // Современные SDK объединяют user-not-found + wrong-password в один код
+      return 'Имя или ПИН не совпадают. Проверь и попробуй ещё раз 🎾';
+    case 'auth/invalid-email':
+      return 'Хм, с этим именем не получается. Попробуй буквами 🎾';
+    case 'auth/too-many-requests':
+      return 'Слишком много попыток! Давай передохнём минутку ⏳';
+    case 'auth/network-request-failed':
+    case 'no-cloud':
+      return 'Кажется, нет интернета. Проверь сеть и попробуй снова 📡';
+    case 'auth/operation-not-allowed':
+    case 'auth/weak-password':
+    default:
+      return 'Что-то пошло не так. Попробуй ещё раз.';
+  }
+}
+
+/**
+ * Применяет данные облачного аккаунта после входа.
+ * Сливает локальный прогресс с облачным (если локальный не пустой).
+ * uid — uid вошедшего пользователя, name — отображаемое имя.
+ */
+function applyAccountAfterSignIn(uid, name) {
+  cloudLoadPlayer(uid).then(function(cloudData) {
+    var localPts = profile.points || 0;
+
+    // Облачный профиль не загрузился (нет сети/ошибка) — НЕ затираем
+    // локальный прогресс нулями. Оставляем как есть и идём в меню.
+    if (!cloudData) {
+      profile.onboarded = true;
+      saveProfile();
+      if (localPts > 0) {
+        showBadgeToast('Не удалось загрузить данные аккаунта — прогресс сохранён локально');
+      }
+      buildMenu();
+      showScreen('menu');
+      return;
+    }
+
+    var cloudPts = (typeof cloudData.points === 'number') ? cloudData.points : 0;
+    var cloudBest = (typeof cloudData.bestStreakEver === 'number') ? cloudData.bestStreakEver : 0;
+
+    if (localPts > 0) {
+      // Локальный прогресс есть — предлагаем слияние
+      var merge = confirm(
+        'У тебя на этом устройстве уже есть прогресс (' + localPts + ' мячей). ' +
+        'Добавить его к аккаунту? (Отмена — войти с прогрессом из аккаунта)'
+      );
+
+      if (merge) {
+        // Берём максимум из локального и облачного
+        profile.points = Math.max(localPts, cloudPts);
+        profile.bestStreakEver = Math.max(profile.bestStreakEver || 0, cloudBest);
+        profile.onboarded = true;
+        saveProfile();
+        cloudSyncProfile();
+      } else {
+        // Загружаем из облака (отбрасываем локальный прогресс)
+        profile.points = cloudPts;
+        profile.bestStreakEver = cloudBest;
+        profile.onboarded = true;
+        saveProfile();
+      }
+    } else {
+      // Локального прогресса нет — просто применяем из облака
+      profile.points = cloudPts;
+      profile.bestStreakEver = cloudBest;
+      profile.onboarded = true;
+      saveProfile();
+    }
+
+    buildMenu();
+    showScreen('menu');
+  });
+}
+
+/** Обработчик таба «Я новенький» */
+elAuthTabRegister.addEventListener('click', function() {
+  showAuthScreen('register');
+});
+
+/** Обработчик таба «У меня есть аккаунт» */
+elAuthTabLogin.addEventListener('click', function() {
+  showAuthScreen('login');
+});
+
+/** Обработчик кнопки «В Академию!» на форме регистрации */
 document.getElementById('btn-auth-submit').addEventListener('click', function() {
   var name = document.getElementById('auth-name').value;
   var pin  = document.getElementById('auth-pin').value;
@@ -1508,8 +1665,62 @@ document.getElementById('btn-auth-submit').addEventListener('click', function() 
         showScreen('menu');
       }
     } else {
-      errEl.textContent = result.error || 'Ошибка. Попробуй ещё раз.';
+      // Мягкая реплика Эйса по коду ошибки; если кода нет —
+      // показываем конкретный текст серверной валидации
+      errEl.textContent = result.code ? mapAuthError(result.code) : (result.error || 'Ошибка. Попробуй ещё раз.');
       errEl.classList.remove('hidden');
+    }
+  });
+});
+
+/** Обработчик кнопки «На корт!» на форме входа */
+elBtnLoginSubmit.addEventListener('click', function() {
+  var name = elLoginName.value;
+  var pin  = elLoginPin.value;
+
+  // Клиентская валидация
+  if (!name || name.trim().length < 1) {
+    elLoginError.textContent = 'Введи своё имя!';
+    elLoginError.classList.remove('hidden');
+    return;
+  }
+  if (!/^\d{4}$/.test(pin)) {
+    elLoginError.textContent = 'ПИН — ровно 4 цифры (0-9)';
+    elLoginError.classList.remove('hidden');
+    return;
+  }
+
+  elLoginError.classList.add('hidden');
+  elBtnLoginSubmit.disabled = true;
+  elBtnLoginSubmit.textContent = 'Входим...';
+
+  cloudSignIn(name.trim(), pin).then(function(result) {
+    elBtnLoginSubmit.disabled = false;
+    elBtnLoginSubmit.textContent = 'На корт! 🎾';
+
+    if (result.ok) {
+      // Успешный вход — сбрасываем счётчик
+      loginAttempts = 0;
+      applyAccountAfterSignIn(result.uid, name.trim());
+    } else {
+      // Счётчик неудачных попыток
+      loginAttempts++;
+
+      // После 5 неудач — блокируем на 30 секунд
+      if (loginAttempts >= 5) {
+        elBtnLoginSubmit.disabled = true;
+        elBtnLoginSubmit.textContent = 'Сделаем паузу на полминуты 🎾';
+        if (loginLockTimer) clearTimeout(loginLockTimer);
+        loginLockTimer = setTimeout(function() {
+          loginAttempts = 0;
+          elBtnLoginSubmit.disabled = false;
+          elBtnLoginSubmit.textContent = 'На корт! 🎾';
+          loginLockTimer = null;
+        }, 30000);
+      }
+
+      elLoginError.textContent = mapAuthError(result.code);
+      elLoginError.classList.remove('hidden');
     }
   });
 });
@@ -1631,6 +1842,13 @@ elBtnWallBack.addEventListener('click', function() {
   showScreen('menu');
 });
 
+// «Выйти» — выход из аккаунта
+elBtnLogout.addEventListener('click', function() {
+  cloudSignOut().then(function() {
+    showAuthScreen('login');
+  });
+});
+
 // =====================================================
 // ИНИЦИАЛИЗАЦИЯ ПРИЛОЖЕНИЯ
 // =====================================================
@@ -1639,29 +1857,72 @@ elBtnWallBack.addEventListener('click', function() {
 checkRetroBadges();
 
 /**
- * Запускает приложение после инициализации Firebase.
- * cloudOk — boolean: true если Firebase успешно готов.
- * Определяет: показать экран auth, онбординг или меню.
+ * Запускает приложение после инициализации Firebase и резолва onAuthStateChanged.
+ * cloudOk — boolean: true если Firebase сконфигурирован.
+ * user — объект пользователя Firebase или null.
  */
-function startApp(cloudOk) {
+function startApp(cloudOk, user) {
   var hasConfig = (typeof FIREBASE_CONFIG !== 'undefined' && FIREBASE_CONFIG !== null);
   var acct      = loadAccount();
 
-  if (hasConfig && cloudOk && !acct) {
-    // Firebase настроен и доступен, аккаунта нет — показываем регистрацию
-    showAuthScreen();
-  } else if (!profile.onboarded) {
-    // Нет Firebase или он недоступен/аккаунт уже есть — онбординг
-    buildOnboarding();
-    showScreen('onboarding');
+  if (hasConfig && cloudOk) {
+    // Firebase настроен и SDK загружен
+    if (user) {
+      // Есть активная Firebase-сессия
+      if (!acct) {
+        // Аккаунт не сохранён локально — восстанавливаем из облака
+        cloudLoadPlayer(user.uid).then(function(cloudData) {
+          if (cloudData && cloudData.name) {
+            saveAccount(user.uid, cloudData.name);
+          }
+          buildMenu();
+          showScreen('menu');
+        });
+        return;
+      }
+      // Аккаунт есть — прямо в меню (или онбординг при первом входе)
+      if (!profile.onboarded) {
+        buildOnboarding();
+        showScreen('onboarding');
+      } else {
+        buildMenu();
+        showScreen('menu');
+      }
+    } else {
+      // Нет активной Firebase-сессии
+      if (acct) {
+        // Аккаунт есть локально (гость с прогрессом, сессия устарела) — в меню
+        buildMenu();
+        showScreen('menu');
+      } else if (!profile.onboarded) {
+        // Новый пользователь без онбординга — показываем регистрацию
+        showAuthScreen('register');
+      } else {
+        // Уже прошёл онбординг гостем — в меню без аккаунта
+        buildMenu();
+        showScreen('menu');
+      }
+    }
   } else {
-    // Возвращающийся пользователь — сразу в меню
-    buildMenu();
-    showScreen('menu');
+    // Firebase не настроен или SDK не загружен — локальный режим
+    if (!profile.onboarded) {
+      buildOnboarding();
+      showScreen('onboarding');
+    } else {
+      buildMenu();
+      showScreen('menu');
+    }
   }
 }
 
-// Инициализируем Firebase (если есть конфиг), затем запускаем приложение
+// Инициализируем Firebase, ждём первого onAuthStateChanged, затем запускаем приложение.
+// Ни один экран не показывается до резолва cloudWaitForAuth (все .screen hidden по умолчанию).
 cloudInit().then(function(cloudOk) {
-  startApp(cloudOk);
+  if (!cloudOk) {
+    startApp(false, null);
+    return;
+  }
+  cloudWaitForAuth().then(function(user) {
+    startApp(true, user);
+  });
 });

@@ -11,14 +11,22 @@
   <!-- ===== КОНФЕТТИ (поверх всего) ===== -->
   <div id="confetti-layer" class="confetti-layer"></div>
 
-  <!-- ===== ЭКРАН AUTH: РЕГИСТРАЦИЯ ===== -->
+  <!-- ===== ЭКРАН AUTH: РЕГИСТРАЦИЯ / ВХОД ===== -->
   <div id="screen-auth" class="screen hidden">
     <div class="auth-wrap">
       <div class="ace-big ace-wobble">🎾</div>
       <div class="ace-bubble auth-bubble" id="ace-auth-bubble">
         Привет! Я Эйс. Добро пожаловать в Академию! Как тебя зовут?
       </div>
-      <div class="auth-form">
+
+      <!-- Табы переключения режимов -->
+      <div class="auth-tabs">
+        <button id="auth-tab-register" class="auth-tab auth-tab-active">🌟 Я новенький</button>
+        <button id="auth-tab-login" class="auth-tab">🎾 У меня есть аккаунт</button>
+      </div>
+
+      <!-- Форма регистрации -->
+      <div id="auth-form-register" class="auth-form">
         <label class="auth-label" for="auth-name">Твоё имя (1–20 символов)</label>
         <input id="auth-name" class="auth-input" type="text"
                placeholder="Например: Артём" maxlength="20" autocomplete="off" />
@@ -27,7 +35,7 @@
         <input id="auth-pin" class="auth-input" type="password"
                inputmode="numeric" maxlength="4" placeholder="••••" autocomplete="off" />
 
-        <p class="auth-hint">ПИН — твой секретный код. Он пригодится, когда появится вход с других устройств 🔒</p>
+        <p class="auth-hint">ПИН — твой секретный код для входа с других устройств 🔒</p>
         <p id="auth-error" class="auth-error hidden"></p>
 
         <button id="btn-auth-submit" class="btn btn-accent btn-large auth-submit-btn">
@@ -35,6 +43,25 @@
         </button>
         <button id="btn-auth-skip" class="btn-skip">Сначала попробую без регистрации →</button>
       </div>
+
+      <!-- Форма входа (другое устройство) -->
+      <div id="auth-form-login" class="auth-form hidden">
+        <label class="auth-label" for="login-name">Твоё имя</label>
+        <input id="login-name" class="auth-input" type="text"
+               placeholder="Например: Артём" maxlength="20" autocomplete="off" />
+
+        <label class="auth-label" for="login-pin">ПИН-код (4 цифры)</label>
+        <input id="login-pin" class="auth-input" type="password"
+               inputmode="numeric" maxlength="4" placeholder="••••" autocomplete="off" />
+
+        <p class="auth-hint">Забыл ПИН? Восстановить нельзя — заведи новый аккаунт во вкладке «Я новенький».</p>
+        <p id="login-error" class="auth-error hidden"></p>
+
+        <button id="btn-login-submit" class="btn btn-accent btn-large auth-submit-btn">
+          На корт! 🎾
+        </button>
+      </div>
+
     </div>
   </div>
 
@@ -72,6 +99,9 @@
       <button id="btn-hall" class="btn btn-outline btn-hall">🏆 Профиль</button>
       <button id="btn-wall" class="btn btn-outline btn-wall">📣 Стена академии</button>
     </div>
+
+    <!-- Кнопка выхода из аккаунта (видна только при наличии аккаунта) -->
+    <button id="btn-logout" class="btn-logout hidden">Выйти 🚪</button>
 
     <!-- Тренировка дня -->
     <button id="btn-daily" class="btn btn-accent btn-daily">⚡ Тренировка дня</button>

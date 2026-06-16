@@ -1247,3 +1247,78 @@ h1 {
     padding: 11px 8px;
   }
 }
+
+/* ===== ТАБЫ ВЫБОРА РЕЖИМА НА ЭКРАНЕ AUTH ===== */
+.auth-tabs {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  width: 100%;
+  max-width: 360px;
+}
+
+/* Неактивный таб — бледный */
+.auth-tab {
+  flex: 1;
+  padding: 10px 12px;
+  border: 2px solid #fde9c0;
+  border-radius: 10px;
+  background: #fff;
+  color: #975a16;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  text-align: center;
+}
+
+.auth-tab:hover,
+.auth-tab:focus {
+  border-color: #f6ad55;
+  background: #fffbeb;
+  outline: none;
+}
+
+/* Активный таб — акцентный, оранжевый */
+.auth-tab-active {
+  background: linear-gradient(135deg, #f6ad55, #ed8936);
+  border-color: #ed8936;
+  color: #fff;
+}
+
+.auth-tab-active:hover,
+.auth-tab-active:focus {
+  background: linear-gradient(135deg, #ed8936, #dd6b20);
+  border-color: #dd6b20;
+  color: #fff;
+}
+
+/* ===== КНОПКА ВЫХОДА В МЕНЮ ===== */
+/* Компактная, мягкая — не агрессивная, на базе outline */
+.btn-logout {
+  display: block;
+  width: 100%;
+  margin-bottom: 16px;
+  padding: 10px 16px;
+  border: 2px solid #fde9c0;
+  border-radius: 10px;
+  background: transparent;
+  color: #a0aec0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+
+.btn-logout:hover,
+.btn-logout:focus {
+  border-color: #f6ad55;
+  color: #975a16;
+  background: #fffbeb;
+  outline: none;
+}
+
+.btn-logout:active {
+  transform: scale(0.98);
+}
