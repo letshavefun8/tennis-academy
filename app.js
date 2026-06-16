@@ -116,6 +116,92 @@ function getNextRank(points) {
 }
 
 // =====================================================
+// ЗВУКОВОЙ МОДУЛЬ (Web Audio API, без внешних файлов)
+// =====================================================
+var SOUND_KEY = 'tennisAcademy.sound';
+
+// Флаг включённости звука — по умолчанию выключен
+var soundEnabled = (localStorage.getItem(SOUND_KEY) === 'true');
+
+// AudioContext создаём лениво при первом включении (браузеры блокируют до жеста)
+var audioCtx = null;
+
+/** Возвращает AudioContext, создаёт при первом вызове.
+ *  При ошибке (нет поддержки / заблокирован) — возвращает null и гасит звук. */
+function getAudioCtx() {
+  if (!audioCtx) {
+    try {
+      var Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) { soundEnabled = false; return null; }
+      audioCtx = new Ctx();
+    } catch (e) {
+      console.warn('tennisAcademy: звук недоступен', e);
+      soundEnabled = false;
+      return null;
+    }
+  }
+  return audioCtx;
+}
+
+/**
+ * Воспроизводит короткий тон через осциллятор.
+ * freq — частота Гц, duration — длительность сек, gain — громкость 0..1,
+ * type — тип волны ('sine'|'triangle'|'square')
+ */
+function playTone(freq, duration, gain, type, startTime) {
+  var ctx = getAudioCtx();
+  var osc = ctx.createOscillator();
+  var vol = ctx.createGain();
+  osc.connect(vol);
+  vol.connect(ctx.destination);
+  osc.type = type || 'sine';
+  osc.frequency.setValueAtTime(freq, startTime);
+  vol.gain.setValueAtTime(gain || 0.2, startTime);
+  // Плавное угасание в конце — убирает щелчок
+  vol.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+  osc.start(startTime);
+  osc.stop(startTime + duration + 0.01);
+}
+
+/** Звук верного ответа: две ноты вверх */
+function playCorrect() {
+  if (!soundEnabled) return;
+  try {
+    var ctx = getAudioCtx();
+    if (!ctx) return;
+    var t = ctx.currentTime;
+    playTone(523, 0.12, 0.22, 'sine', t);        // до
+    playTone(659, 0.18, 0.22, 'sine', t + 0.10); // ми
+  } catch (e) { console.warn('tennisAcademy: ошибка звука', e); }
+}
+
+/** Фанфары победы: 4 ноты */
+function playVictory() {
+  if (!soundEnabled) return;
+  try {
+    var ctx = getAudioCtx();
+    if (!ctx) return;
+    var t = ctx.currentTime;
+    playTone(523, 0.12, 0.22, 'sine', t);
+    playTone(659, 0.12, 0.22, 'sine', t + 0.12);
+    playTone(784, 0.12, 0.22, 'sine', t + 0.24);
+    playTone(1047, 0.25, 0.22, 'sine', t + 0.36);
+  } catch (e) { console.warn('tennisAcademy: ошибка звука', e); }
+}
+
+/** Мягкий звук неверного ответа (не резкий — детям ошибка не наказание) */
+function playWrong() {
+  if (!soundEnabled) return;
+  try {
+    var ctx = getAudioCtx();
+    if (!ctx) return;
+    var t = ctx.currentTime;
+    // Мягкий «бум» на низкой ноте
+    playTone(220, 0.25, 0.15, 'triangle', t);
+  } catch (e) { console.warn('tennisAcademy: ошибка звука', e); }
+}
+
+// =====================================================
 // LOCALSTORAGE-ПРОФИЛЬ (plan 2.1)
 // =====================================================
 var STORAGE_KEY = 'tennisAcademy.v1';
@@ -799,6 +885,7 @@ function handleAnswer(clickedIdx, isCorrect, q, shuffledOptions, isRetry) {
   // При верном ответе Эйс подпрыгивает (plan 2.8); класс снимаем
   // по окончании анимации, чтобы она запускалась на каждом верном ответе
   if (isCorrect) {
+    playCorrect(); // звук верного ответа
     var aceInline = elExplanationWrap.querySelector('.ace-inline');
     if (aceInline) {
       aceInline.classList.add('ace-bounce');
@@ -806,6 +893,8 @@ function handleAnswer(clickedIdx, isCorrect, q, shuffledOptions, isRetry) {
         aceInline.classList.remove('ace-bounce');
       }, { once: true });
     }
+  } else {
+    playWrong(); // мягкий звук неверного ответа
   }
 
   // Обновляем точки
@@ -954,8 +1043,13 @@ function showResults() {
 
   elAceResultsBubble.textContent = aceReply;
 
-  // Очки сессии
-  elResultPoints.textContent = '+' + session.sessionPoints + ' 🎾';
+  // Очки сессии — анимируем count-up от 0 до N за ~700ms
+  animateCountUp(elResultPoints, session.sessionPoints);
+
+  // Фанфары победы при хорошем результате
+  if (ratio >= 0.55) {
+    playVictory();
+  }
 
   // Лучшая серия (показываем если >= 2)
   if (session.bestStreak >= 2) {
@@ -1037,6 +1131,9 @@ function renderRankProgress(container) {
 // МЕНЮ (plan 2.7)
 // =====================================================
 function buildMenu() {
+  // Актуальная иконка кнопки звука
+  updateSoundIcon();
+
   // Случайная реплика Эйса
   elAceMenuBubble.textContent = pickRandom(ACE_MENU);
 
@@ -1328,7 +1425,7 @@ function showOnboardingResults() {
 
   elResultTitle.textContent = '🎉 Зачислен в Академию!';
   elAceResultsBubble.textContent = ACE_ONBOARD_DONE;
-  elResultPoints.textContent = '+' + session.sessionPoints + ' 🎾';
+  animateCountUp(elResultPoints, session.sessionPoints);
   elResultStreak.classList.add('hidden');
   elResultBadges.classList.add('hidden');
   elResultStarsRow.classList.add('hidden');
@@ -1746,6 +1843,68 @@ document.getElementById('btn-auth-skip').addEventListener('click', function() {
 });
 
 // =====================================================
+// COUNT-UP АНИМАЦИЯ ОЧКОВ
+// =====================================================
+
+/**
+ * Анимирует число в элементе el от 0 до target за ~700ms (easeOut).
+ * Сохраняет эмодзи 🎾 после числа. При target === 0 просто ставит «+0 🎾».
+ */
+function animateCountUp(el, target) {
+  if (!target || target <= 0) {
+    el.textContent = '+0 🎾';
+    return;
+  }
+  var duration = 700; // миллисекунды
+  var startTime = null;
+
+  function step(timestamp) {
+    if (!startTime) startTime = timestamp;
+    var elapsed = timestamp - startTime;
+    var progress = Math.min(elapsed / duration, 1);
+    // easeOut кубическая
+    var eased = 1 - Math.pow(1 - progress, 3);
+    var current = Math.round(eased * target);
+    el.textContent = '+' + current + ' 🎾';
+    if (progress < 1) {
+      requestAnimationFrame(step);
+    }
+  }
+
+  requestAnimationFrame(step);
+}
+
+// =====================================================
+// КНОПКА ЗВУКА
+// =====================================================
+
+var elBtnSound = document.getElementById('btn-sound');
+
+/** Обновляет иконку кнопки звука по текущему состоянию soundEnabled */
+function updateSoundIcon() {
+  if (elBtnSound) {
+    elBtnSound.textContent = soundEnabled ? '🔊' : '🔇';
+    elBtnSound.title = soundEnabled ? 'Звук включён (нажми для выкл)' : 'Звук выключен (нажми для вкл)';
+  }
+}
+
+if (elBtnSound) {
+  elBtnSound.addEventListener('click', function() {
+    soundEnabled = !soundEnabled;
+    // Сохраняем выбор в localStorage
+    localStorage.setItem(SOUND_KEY, String(soundEnabled));
+    updateSoundIcon();
+    // При включении играем звук-подтверждение (инициализирует AudioContext)
+    if (soundEnabled) {
+      playCorrect();
+    }
+  });
+}
+
+// Устанавливаем иконку при старте
+updateSoundIcon();
+
+// =====================================================
 // ОБРАБОТЧИКИ КНОПОК
 // =====================================================
 
@@ -1861,9 +2020,11 @@ elBtnLogout.addEventListener('click', function() {
 // Гость нажимает «Войти или зарегистрироваться» — ведём на экран auth.
 // По умолчанию вкладка регистрации (локальный прогресс мигрирует в новый
 // аккаунт), но на экране можно переключиться на вход.
-elBtnGuestLogin.addEventListener('click', function() {
-  showAuthScreen('register');
-});
+if (elBtnGuestLogin) {
+  elBtnGuestLogin.addEventListener('click', function() {
+    showAuthScreen('register');
+  });
+}
 
 // =====================================================
 // ИНИЦИАЛИЗАЦИЯ ПРИЛОЖЕНИЯ
