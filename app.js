@@ -4,6 +4,16 @@
 // Комментарии на русском языке.
 // =====================================================
 
+// Версия сборки — меняется при каждом деплое, видна внизу экрана.
+// Помогает убедиться, что на боевой сайт долетела свежая версия.
+var APP_VERSION = 'сборка 8 · 17.06';
+
+// Показываем версию внизу страницы
+(function showVersion() {
+  var el = document.getElementById('app-version');
+  if (el) el.textContent = APP_VERSION;
+})();
+
 // Проверяем, что данные подключены (questions.js загружен до app.js)
 if (typeof QUESTION_BANK === 'undefined') {
   document.body.innerHTML = '<div style="max-width:500px;margin:60px auto;padding:24px;background:#fff;border-radius:12px;text-align:center;font-family:sans-serif;color:#e53e3e;border:2px solid #e53e3e;"><h2>Ошибка</h2><p>Не найден файл questions.js — запустите convert.py для генерации данных.</p></div>';
@@ -1659,7 +1669,10 @@ function mapAuthError(code, rawMsg) {
       return 'Слишком много попыток! Давай передохнём минутку ⏳';
     case 'auth/network-request-failed':
     case 'no-cloud':
-      return 'Кажется, нет интернета. Проверь сеть и попробуй снова 📡';
+      // Временно показываем код — диагностика блокировок в РФ без VPN
+      var net = code || '';
+      if (rawMsg && rawMsg !== code) net += (net ? ' — ' : '') + rawMsg;
+      return 'Кажется, нет интернета. Проверь сеть и попробуй снова 📡' + (net ? ' [' + net + ']' : '');
     case 'auth/operation-not-allowed':
     case 'auth/weak-password':
     default:
