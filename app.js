@@ -6,7 +6,7 @@
 
 // Версия сборки — меняется при каждом деплое, видна внизу экрана.
 // Помогает убедиться, что на боевой сайт долетела свежая версия.
-var APP_VERSION = 'сборка 13 · 17.06';
+var APP_VERSION = 'сборка 14 · 17.06';
 
 // Показываем версию внизу страницы
 (function showVersion() {
@@ -318,6 +318,23 @@ function saveProfile() {
   } catch (e) {
     console.warn('tennisAcademy: не удалось сохранить профиль', e);
   }
+}
+
+/**
+ * Сбрасывает локальный прогресс при выходе из аккаунта — чтобы следующий
+ * игрок на этом устройстве начинал с чистого листа, а чужие достижения
+ * не подмешивались в новый аккаунт. Звук (настройка устройства) сохраняется.
+ */
+function resetLocalProgress() {
+  profile = { v: 1, points: 0, onboarded: true, history: {}, bestStreakEver: 0, days: [], badges: {} };
+  saveProfile();
+  try {
+    localStorage.removeItem('tennisAcademy.lastDailyFeed');
+    for (var b = 0; b <= 16; b++) {
+      localStorage.removeItem('tennisAcademy.lastLessonFeed.' + b);
+    }
+    localStorage.removeItem('tennisAcademy.syncQueue');
+  } catch (e) {}
 }
 
 // Загружаем профиль при старте
@@ -2233,6 +2250,7 @@ elBtnWallBack.addEventListener('click', function() {
 if (elBtnLogout) {
   elBtnLogout.addEventListener('click', function() {
     cloudSignOut().then(function() {
+      resetLocalProgress();
       showAuthScreen('login');
     });
   });
