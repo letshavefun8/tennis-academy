@@ -6,7 +6,7 @@
 
 // Версия сборки — меняется при каждом деплое, видна внизу экрана.
 // Помогает убедиться, что на боевой сайт долетела свежая версия.
-var APP_VERSION = 'сборка 15 · 17.06';
+var APP_VERSION = 'сборка 16 · 18.06';
 
 // Показываем версию внизу страницы
 (function showVersion() {
@@ -286,7 +286,7 @@ var STORAGE_KEY = 'tennisAcademy.v1';
 
 /** Загружает профиль из localStorage; при ошибке возвращает дефолт */
 function loadProfile() {
-  var def = { v: 1, points: 0, onboarded: false, history: {}, bestStreakEver: 0, days: [], badges: {} };
+  var def = { v: 1, points: 0, onboarded: false, history: {}, bestStreakEver: 0, days: [], badges: {}, cloudBlockStars: {}, cloudDaysCount: 0 };
   try {
     var raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return def;
@@ -304,7 +304,11 @@ function loadProfile() {
     var bestStreakEver = (typeof obj.bestStreakEver === 'number' && obj.bestStreakEver >= 0) ? Math.floor(obj.bestStreakEver) : 0;
     var days = (Array.isArray(obj.days)) ? obj.days : [];
     var badges = (typeof obj.badges === 'object' && obj.badges !== null && !Array.isArray(obj.badges)) ? obj.badges : {};
-    return { v: 1, points: pts, onboarded: onboarded, history: history, bestStreakEver: bestStreakEver, days: days, badges: badges };
+    // Облачный базовый прогресс (восстанавливается при входе в аккаунт):
+    // звёзды блоков и счётчик дней, которых нет в локальной истории.
+    var cloudBlockStars = (typeof obj.cloudBlockStars === 'object' && obj.cloudBlockStars !== null && !Array.isArray(obj.cloudBlockStars)) ? obj.cloudBlockStars : {};
+    var cloudDaysCount = (typeof obj.cloudDaysCount === 'number' && obj.cloudDaysCount >= 0) ? Math.floor(obj.cloudDaysCount) : 0;
+    return { v: 1, points: pts, onboarded: onboarded, history: history, bestStreakEver: bestStreakEver, days: days, badges: badges, cloudBlockStars: cloudBlockStars, cloudDaysCount: cloudDaysCount };
   } catch (e) {
     console.warn('tennisAcademy: профиль сброшен (ошибка парсинга)', e);
     return def;
@@ -326,7 +330,7 @@ function saveProfile() {
  * не подмешивались в новый аккаунт. Звук (настройка устройства) сохраняется.
  */
 function resetLocalProgress() {
-  profile = { v: 1, points: 0, onboarded: true, history: {}, bestStreakEver: 0, days: [], badges: {} };
+  profile = { v: 1, points: 0, onboarded: true, history: {}, bestStreakEver: 0, days: [], badges: {}, cloudBlockStars: {}, cloudDaysCount: 0 };
   saveProfile();
   try {
     localStorage.removeItem('tennisAcademy.lastDailyFeed');
@@ -737,10 +741,15 @@ function getBlockStars(blockId) {
   }
 
   var ratio = mastered / total;
-  if (ratio === 1) return 3;
-  if (ratio >= 0.8) return 2;
-  if (ratio >= 0.5) return 1;
-  return 0;
+  var computed = 0;
+  if (ratio === 1) computed = 3;
+  else if (ratio >= 0.8) computed = 2;
+  else if (ratio >= 0.5) computed = 1;
+
+  // Облачный базовый уровень звёзд (после входа в аккаунт, когда локальной
+  // истории ещё нет). Берём максимум: переиграл больше — победит computed.
+  var cloudBase = (profile.cloudBlockStars && profile.cloudBlockStars[String(blockId)]) || 0;
+  return Math.max(computed, cloudBase);
 }
 
 /** Возвращает HTML-строку со звёздами */
@@ -1388,7 +1397,8 @@ function renderHall(playerData) {
     // Локальный профиль
     pts        = profile.points;
     bestStreak = profile.bestStreakEver;
-    daysCount  = Array.isArray(profile.days) ? profile.days.length : 0;
+    // Дни: максимум локальных и восстановленного из облака счётчика
+    daysCount  = Math.max(Array.isArray(profile.days) ? profile.days.length : 0, profile.cloudDaysCount || 0);
     rank       = getRank(pts);
     blockStarsData = null; // null = считаем из локального профиля
     badgesData     = profile.badges;
@@ -1925,6 +1935,11 @@ function applyAccountAfterSignIn(uid, name) {
 
     var cloudPts = (typeof cloudData.points === 'number') ? cloudData.points : 0;
     var cloudBest = (typeof cloudData.bestStreakEver === 'number') ? cloudData.bestStreakEver : 0;
+
+    // Восстанавливаем облачный базовый прогресс: звёзды блоков (для карты
+    // уровней) и счётчик дней. getBlockStars берёт максимум с локальной историей.
+    profile.cloudBlockStars = (cloudData.blockStars && typeof cloudData.blockStars === 'object' && !Array.isArray(cloudData.blockStars)) ? cloudData.blockStars : {};
+    profile.cloudDaysCount = (typeof cloudData.daysCount === 'number') ? cloudData.daysCount : 0;
 
     if (localPts > 0) {
       // Локальный прогресс есть — предлагаем слияние
