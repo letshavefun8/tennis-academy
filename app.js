@@ -6,7 +6,7 @@
 
 // Версия сборки — меняется при каждом деплое, видна внизу экрана.
 // Помогает убедиться, что на боевой сайт долетела свежая версия.
-var APP_VERSION = 'сборка 12 · 17.06';
+var APP_VERSION = 'сборка 13 · 17.06';
 
 // Показываем версию внизу страницы
 (function showVersion() {
@@ -1286,13 +1286,8 @@ function buildMenu() {
   elRankLabel.textContent = rank.emoji + ' ' + rank.name;
   renderRankProgressBar();
 
-  // Имя игрока в заголовке (если есть аккаунт)
-  var acct = loadAccount();
-  if (acct && acct.name) {
-    elMenuPlayerName.textContent = acct.name + ' — Академия 🎾';
-  } else {
-    elMenuPlayerName.textContent = 'Академия тенниса';
-  }
+  // Заголовок академии (без имени игрока)
+  elMenuPlayerName.textContent = 'Академия тенниса';
 
   // Строим карточки по секциям
   buildSectionCards('court',   document.getElementById('cards-court'));

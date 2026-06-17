@@ -48,13 +48,13 @@ body {
 /* ===== ВЕРСИЯ СБОРКИ ===== */
 .app-version {
   position: fixed;
-  bottom: 4px;
+  bottom: 72px; /* выше нижнего таб-бара, чтобы не перекрывался */
   right: 8px;
   font-size: 0.7rem;
   color: #b9a06a;
   opacity: 0.7;
   pointer-events: none;
-  z-index: 50;
+  z-index: 8001;
 }
 
 /* ===== ЭКРАНЫ ===== */
