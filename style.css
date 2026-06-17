@@ -1,3 +1,27 @@
+/* ===== ДИЗАЙН-СИСТЕМА: ТОКЕНЫ (источник истины — design-preview.html) ===== */
+:root{
+  /* фон и поверхности */
+  --bg:#FBF7EF; --surface:#FFFFFF; --surface-soft:#F4EFE4;
+  /* бренд / акцент / награды */
+  --brand:#1F6F50; --brand-ink:#134B36;
+  --accent:#C7E03A; --accent-ink:#2C3A00; --accent-deep:#A8C72A;
+  --warm:#F2A03D;
+  /* семантика */
+  --success:#2E9E5B; --success-bg:#E9F7EE;
+  --gentle:#6B7A86; --gentle-bg:#F0F2F4;
+  /* текст / границы */
+  --text:#1C2B23; --muted:#5E6B63;
+  --border:#E7E1D4; --border-strong:#D4CCBA;
+  /* радиусы / отступы / тени */
+  --r-card:16px; --r-btn:14px; --r-pill:999px; --r-sm:10px;
+  --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:20px; --s6:24px; --s8:32px;
+  --sh-card:0 1px 2px rgba(28,43,35,.04),0 4px 12px rgba(28,43,35,.06);
+  --sh-pop:0 6px 20px rgba(28,43,35,.10);
+  --sh-brand:0 6px 16px rgba(31,111,80,.18);
+  --font-display:'Unbounded',system-ui,sans-serif;
+  --font-body:'Nunito',system-ui,sans-serif;
+}
+
 /* ===== ОБЩИЙ СБРОС ===== */
 *, *::before, *::after {
   box-sizing: border-box;
@@ -5,19 +29,19 @@
   padding: 0;
 }
 
-/* ===== БАЗОВЫЕ СТИЛИ: игровая тёплая тема ===== */
+/* ===== БАЗОВЫЕ СТИЛИ ===== */
 body {
-  font-family: 'Nunito', -apple-system, BlinkMacSystemFont, sans-serif;
-  background: linear-gradient(160deg, #fffbeb 0%, #fef9ee 60%, #fff7e6 100%);
-  color: #1a202c;
+  font-family: var(--font-body);
+  background: linear-gradient(170deg,#FBF7EF 0%,#FaF5E9 60%,#FBF6EC 100%);
+  color: var(--text);
   min-height: 100vh;
   padding: 16px;
+  -webkit-font-smoothing: antialiased;
 }
 
 /* ===== ГЛОБАЛЬНЫЙ ФОКУС С КЛАВИАТУРЫ ===== */
-/* Показываем кольцо только при навигации с клавиатуры, не при клике мышью */
 :focus-visible {
-  outline: 3px solid #8B5CF6;
+  outline: 3px solid var(--brand);
   outline-offset: 2px;
 }
 
@@ -35,9 +59,9 @@ body {
 
 /* ===== ЭКРАНЫ ===== */
 .screen {
-  max-width: 640px;
+  max-width: 480px;
   margin: 0 auto;
-  padding: 20px 0 60px;
+  padding: 16px 16px 88px;
 }
 
 .hidden {
@@ -75,7 +99,7 @@ body {
   display: inline-block;
 }
 
-/* Покачивание маскота (меню, итоги) */
+/* Покачивание маскота */
 .ace-wobble {
   animation: ace-wobble 2.4s ease-in-out infinite;
   transform-origin: center bottom;
@@ -106,12 +130,12 @@ body {
 .ace-bubble {
   position: relative;
   display: inline-block;
-  background: #fff;
-  border: 2px solid #f6ad55;
-  border-radius: 16px;
+  background: var(--surface);
+  border: 2px solid var(--warm);
+  border-radius: var(--r-card);
   padding: 12px 16px;
   font-size: 0.95rem;
-  color: #744210;
+  color: var(--text);
   line-height: 1.5;
   max-width: 280px;
   margin-left: 12px;
@@ -125,7 +149,7 @@ body {
   top: 18px;
   border-width: 7px 14px 7px 0;
   border-style: solid;
-  border-color: transparent #f6ad55 transparent transparent;
+  border-color: transparent var(--warm) transparent transparent;
 }
 
 .ace-bubble::after {
@@ -135,7 +159,7 @@ body {
   top: 19px;
   border-width: 6px 12px 6px 0;
   border-style: solid;
-  border-color: transparent #fff transparent transparent;
+  border-color: transparent var(--surface) transparent transparent;
 }
 
 /* ===== ОНБОРДИНГ ===== */
@@ -162,10 +186,10 @@ body {
 
 /* ===== МЕНЮ ===== */
 h1 {
-  font-family: 'Baloo 2', cursive;
+  font-family: var(--font-display);
   font-size: 1.7rem;
   font-weight: 700;
-  color: #744210;
+  color: var(--brand-ink);
   text-align: center;
   margin-bottom: 16px;
   line-height: 1.3;
@@ -188,12 +212,13 @@ h1 {
 .rank-label {
   font-size: 1.05rem;
   font-weight: 700;
-  color: #744210;
+  color: var(--brand-ink);
 }
 
 /* Полоса прогресса звания */
 .rank-progress-wrap {
-  background: #fde9c0;
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
   border-radius: 8px;
   height: 14px;
   overflow: hidden;
@@ -202,8 +227,7 @@ h1 {
 
 .rank-progress-bar {
   height: 100%;
-  /* Градиент оранжевый → фиолетовый — акцент второго цвета */
-  background: linear-gradient(90deg, #f6ad55, #8B5CF6);
+  background: var(--brand);
   border-radius: 8px;
   transition: width 0.5s ease;
   width: 0%;
@@ -212,7 +236,7 @@ h1 {
 .rank-progress-text {
   text-align: center;
   font-size: 0.82rem;
-  color: #6B7280;
+  color: var(--muted);
   margin-bottom: 20px;
 }
 
@@ -231,15 +255,16 @@ h1 {
 }
 
 .section-title {
+  font-family: var(--font-display);
   font-size: 1rem;
   font-weight: 700;
-  color: #975a16;
+  color: var(--brand-ink);
   margin-bottom: 10px;
   padding-bottom: 4px;
-  border-bottom: 2px solid #fde9c0;
+  border-bottom: 2px solid var(--border);
 }
 
-/* ===== КАРТОЧКИ БЛОКОВ ===== */
+/* ===== КАРТОЧКИ БЛОКОВ (bento) ===== */
 .section-cards {
   display: flex;
   flex-direction: column;
@@ -252,12 +277,13 @@ h1 {
   align-items: center;
   padding: 13px 16px;
   min-height: 52px;
-  background: #fff;
-  border: 2px solid #fde9c0;
-  border-radius: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-card);
+  box-shadow: var(--sh-card);
   cursor: pointer;
   font-size: 0.95rem;
-  color: #2d3748;
+  color: var(--text);
   text-align: left;
   transition: border-color 0.15s, background 0.15s;
   line-height: 1.4;
@@ -266,8 +292,7 @@ h1 {
 
 .block-card:hover,
 .block-card:focus {
-  border-color: #f6ad55;
-  background: #fffbeb;
+  border-color: var(--border-strong);
 }
 
 .card-label {
@@ -287,11 +312,11 @@ h1 {
 }
 
 .star-filled {
-  color: #f6ad55;
+  color: var(--warm);
 }
 
 .star-empty {
-  color: #e2d9c9;
+  color: var(--border-strong);
 }
 
 /* ===== ТОЧКИ-ШАГИ ===== */
@@ -311,23 +336,25 @@ h1 {
   transition: background 0.3s ease;
 }
 
+/* Цвета точек — имена классов НЕ меняем, их генерит app.js */
 .dot-pending {
-  background: #cbd5e0;
+  background: var(--border);
 }
 
 .dot-yellow {
-  background: #f6ad55;
+  background: var(--warm);
+  box-shadow: 0 0 0 3px rgba(242,160,61,.2);
 }
 
 .dot-green {
-  background: #48bb78;
+  background: var(--success);
 }
 
 /* ===== СЧЁТЧИК ГЕЙМА ===== */
 .game-counter {
   text-align: center;
   font-size: 0.85rem;
-  color: #718096;
+  color: var(--muted);
   margin-bottom: 10px;
 }
 
@@ -342,82 +369,99 @@ h1 {
 }
 
 .stake-badge {
-  background: #fef3c7;
-  border: 1px solid #f6ad55;
-  color: #975a16;
-  border-radius: 20px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  color: var(--brand-ink);
+  border-radius: var(--r-pill);
   padding: 4px 12px;
   font-size: 0.88rem;
   font-weight: 600;
 }
 
 .streak-badge {
-  background: #fff5e6;
-  border: 1px solid #ed8936;
-  color: #c05621;
-  border-radius: 20px;
+  background: #FFF1DF;
+  border: 1px solid var(--warm);
+  color: #9A5B12;
+  border-radius: var(--r-pill);
   padding: 4px 12px;
   font-size: 0.88rem;
   font-weight: 700;
 }
 
-/* ===== ТЕКСТ ВОПРОСА ===== */
+/* ===== ТЕКСТ ВОПРОСА (bento) ===== */
 .question-text-wrap {
-  background: #fff;
-  border-radius: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-card);
+  box-shadow: var(--sh-card);
   padding: 18px 20px;
   margin-bottom: 16px;
-  border: 1px solid #fde9c0;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
 }
 
 .question-text {
-  font-size: 1.15rem;
-  line-height: 1.6;
-  color: #2d3748;
+  font-size: 1.1875rem;
+  font-weight: 600;
+  line-height: 1.55;
+  color: var(--text);
 }
 
 /* ===== ВАРИАНТЫ ОТВЕТОВ ===== */
 .options-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
   margin-bottom: 18px;
 }
 
+/* Кнопка варианта — как .opt в эталоне */
 .btn-option {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 12px;
-  padding: 14px 16px;
-  background: #fff;
-  border: 2px solid #e2e8f0;
-  border-radius: 12px;
-  cursor: pointer;
-  font-size: 1.05rem;
-  color: #2d3748;
   text-align: left;
-  line-height: 1.5;
-  transition: border-color 0.15s, background 0.15s;
   width: 100%;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-card);
+  box-shadow: var(--sh-card);
+  padding: 16px;
+  min-height: 64px;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 1.0625rem;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.5;
+  transition: border-color 0.15s, background 0.15s, transform 0.08s;
 }
 
 .btn-option:not(:disabled):hover,
 .btn-option:not(:disabled):focus {
-  border-color: #f6ad55;
-  background: #fffbeb;
+  border-color: var(--border-strong);
+}
+
+.btn-option:not(:disabled):active {
+  transform: scale(.99);
 }
 
 .btn-option:disabled {
   cursor: default;
 }
 
+/* Кружок с буквой варианта */
 .option-letter {
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-display);
   font-weight: 700;
-  color: #975a16;
-  min-width: 24px;
-  flex-shrink: 0;
   font-size: 0.95rem;
+  background: var(--surface-soft);
+  color: var(--brand-ink);
+  transition: background 0.15s, color 0.15s;
 }
 
 .option-text {
@@ -426,34 +470,36 @@ h1 {
 
 /* Состояние: правильный ответ */
 .btn-option.correct {
-  border-color: #48bb78;
-  background: #f0fff4;
+  border-color: var(--success);
+  background: var(--success-bg);
 }
 
 .btn-option.correct .option-letter {
-  color: #276749;
+  background: var(--success);
+  color: #fff;
 }
 
-/* Состояние: неверный выбор (не лучший) — серый, без красного */
+/* Состояние: неверный выбор (не лучший) */
 .btn-option.not-best {
-  border-color: #a0aec0;
-  background: #f7fafc;
-  opacity: 0.75;
+  border-color: var(--gentle);
+  background: var(--gentle-bg);
+  opacity: 0.85;
 }
 
 .btn-option.not-best .option-letter {
-  color: #a0aec0;
+  background: var(--gentle);
+  color: #fff;
 }
 
 .not-best-hint {
   display: block;
   font-size: 0.72rem;
-  color: #a0aec0;
+  color: var(--gentle);
   margin-top: 2px;
   font-style: italic;
 }
 
-/* Анимация правильного ответа */
+/* Анимация правильного ответа — класс нужен app.js, не переименовывать */
 @keyframes pop-correct {
   0%   { transform: scale(1) translateY(0); }
   40%  { transform: scale(1.04) translateY(-4px); }
@@ -465,15 +511,16 @@ h1 {
   animation: pop-correct 0.45s ease-out;
 }
 
-/* ===== ОБЪЯСНЕНИЕ (ЭЙС ОБЪЯСНЯЕТ) ===== */
+/* ===== ОБЪЯСНЕНИЕ (ЭЙС ОБЪЯСНЯЕТ) — как .explain в эталоне ===== */
 .explanation {
   display: flex;
   gap: 12px;
-  background: #fffbeb;
-  border: 1px solid #f6ad55;
-  border-left: 4px solid #ed8936;
-  border-radius: 12px;
-  padding: 14px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--brand);
+  border-radius: var(--r-card);
+  padding: 16px;
+  box-shadow: var(--sh-card);
   margin-bottom: 18px;
   line-height: 1.6;
   align-items: flex-start;
@@ -491,24 +538,26 @@ h1 {
 }
 
 .ace-reaction {
-  font-size: 0.92rem;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
   font-weight: 700;
-  color: #744210;
+  color: var(--brand);
   margin-bottom: 6px;
 }
 
 .explanation-label {
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: #975a16;
+  font-size: 0.72rem;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
+  color: var(--muted);
   margin-bottom: 4px;
 }
 
 .explanation-text {
-  font-size: 0.92rem;
-  color: #744210;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--text);
 }
 
 /* ===== КНОПКА «ДАЛЬШЕ» ===== */
@@ -522,7 +571,9 @@ h1 {
   width: 100%;
   padding: 15px 20px;
   border: none;
-  border-radius: 12px;
+  border-radius: var(--r-btn);
+  min-height: 48px;
+  font-family: var(--font-body);
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
@@ -534,42 +585,46 @@ h1 {
   transform: scale(0.98);
 }
 
-/* Акцентная кнопка (жёлто-оранжевая) */
+/* Акцентная кнопка (лайм) — убран оранжевый градиент */
 .btn-accent {
-  background: linear-gradient(135deg, #f6ad55, #ed8936);
-  color: #fff;
+  background: var(--accent);
+  color: var(--accent-ink);
   border: none;
+  font-family: var(--font-display);
+  box-shadow: 0 6px 16px rgba(168,199,42,.35);
 }
 
 .btn-accent:hover,
 .btn-accent:focus {
-  background: linear-gradient(135deg, #ed8936, #dd6b20);
+  background: var(--accent-deep);
+}
+
+.btn-accent:active {
+  transform: translateY(1px) scale(.99);
 }
 
 /* Нейтральная кнопка */
 .btn-neutral {
-  background: #edf2f7;
-  color: #4a5568;
-  border: 2px solid #e2e8f0;
+  background: var(--surface-soft);
+  color: var(--text);
+  border: 1px solid var(--border);
 }
 
 .btn-neutral:hover,
 .btn-neutral:focus {
-  background: #e2e8f0;
-  border-color: #cbd5e0;
+  border-color: var(--border-strong);
 }
 
 /* Outline кнопка */
 .btn-outline {
-  background: #fff;
-  color: #975a16;
-  border: 2px solid #f6ad55;
+  background: var(--surface);
+  color: var(--brand-ink);
+  border: 1.5px solid var(--brand);
 }
 
 .btn-outline:hover,
 .btn-outline:focus {
-  border-color: #ed8936;
-  background: #fffbeb;
+  background: var(--surface-soft);
 }
 
 /* Большая кнопка */
@@ -582,12 +637,12 @@ h1 {
 
 /* ===== ЭКРАН ИТОГОВ ===== */
 .result-title {
-  font-family: 'Baloo 2', cursive;
+  font-family: var(--font-display);
   font-size: 1.55rem;
   font-weight: 700;
   text-align: center;
   margin-bottom: 16px;
-  color: #744210;
+  color: var(--brand-ink);
 }
 
 .results-ace-row {
@@ -602,19 +657,20 @@ h1 {
   max-width: 280px;
 }
 
+/* Очки сессии — фиолетовый убран, теперь бренд-цвет */
 .result-points {
-  font-family: 'Baloo 2', cursive;
+  font-family: var(--font-display);
   font-size: 2.6rem;
   font-weight: 700;
   text-align: center;
-  color: #8B5CF6;
+  color: var(--brand);
   margin-bottom: 8px;
 }
 
 .result-streak {
   text-align: center;
   font-size: 0.95rem;
-  color: #c05621;
+  color: var(--warm);
   font-weight: 600;
   margin-bottom: 12px;
 }
@@ -624,7 +680,7 @@ h1 {
   text-align: center;
   font-size: 1rem;
   margin-bottom: 14px;
-  color: #744210;
+  color: var(--brand-ink);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -637,7 +693,7 @@ h1 {
 }
 
 .stars-arrow {
-  color: #a0aec0;
+  color: var(--muted);
   font-size: 0.9rem;
 }
 
@@ -659,17 +715,18 @@ h1 {
 }
 
 .result-rank-progress .rank-bar-outer {
-  background: #fde9c0;
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
   border-radius: 8px;
   height: 14px;
   overflow: hidden;
   margin-bottom: 6px;
 }
 
+/* Убран фиолетовый градиент → бренд-цвет */
 .result-rank-progress .rank-bar-inner {
   height: 100%;
-  /* Градиент оранжевый → фиолетовый — акцент второго цвета */
-  background: linear-gradient(90deg, #f6ad55, #8B5CF6);
+  background: var(--brand);
   border-radius: 8px;
   transition: width 0.5s ease;
 }
@@ -677,7 +734,7 @@ h1 {
 .result-rank-progress .rank-progress-text {
   text-align: center;
   font-size: 0.82rem;
-  color: #6B7280;
+  color: var(--muted);
 }
 
 /* Кнопки итогов */
@@ -687,28 +744,17 @@ h1 {
   gap: 12px;
 }
 
-/* ===== АДАПТИВНОСТЬ ===== */
-@media (max-width: 400px) {
-  body {
-    padding: 10px;
-  }
-
-  /* Декоративные крупные элементы — можно уменьшать */
-  h1 {
-    font-size: 1.35rem;
-  }
-
-  .ace-big {
-    font-size: 2.8rem;
-  }
-
-  /* Читаемый текст (вопросы/ответы) — НЕ уменьшаем на телефоне */
-  /* .question-text, .btn-option, .btn — размеры сохраняются из базовых стилей */
-
-  /* Зал славы — 1 колонка на маленьких экранах */
-  .badges-shelf {
-    grid-template-columns: 1fr;
-  }
+/* ===== СТРОКА ЗНАЧКОВ НА ИТОГАХ ===== */
+.result-badges {
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--brand-ink);
+  font-weight: 600;
+  margin-bottom: 10px;
+  padding: 6px 12px;
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
 }
 
 /* ===== ТОПБАР ВОПРОСА (кнопка выхода) ===== */
@@ -722,27 +768,27 @@ h1 {
 .btn-exit {
   background: transparent;
   border: none;
-  color: #975a16;
+  color: var(--brand-ink);
   font-size: 0.88rem;
   font-weight: 600;
   cursor: pointer;
   padding: 10px 16px 10px 4px;
   min-height: 44px;
-  border-radius: 8px;
+  border-radius: var(--r-sm);
   transition: background 0.15s;
   line-height: 1.3;
 }
 
 .btn-exit:hover,
 .btn-exit:focus {
-  background: #fffbeb;
+  background: var(--surface-soft);
 }
 
 /* Кнопка «Сразу в Академию →» на онбординге */
 .btn-skip {
   background: transparent;
   border: none;
-  color: #6B7280;
+  color: var(--muted);
   font-size: 0.82rem;
   cursor: pointer;
   padding: 10px 14px;
@@ -755,44 +801,25 @@ h1 {
 
 .btn-skip:hover,
 .btn-skip:focus {
-  color: #718096;
+  color: var(--brand);
 }
 
-/* Кнопка «Зал славы» в меню */
-.btn-hall {
-  display: block;
-  width: 100%;
-  margin-bottom: 16px;
-}
-
-/* ===== СТРОКА ЗНАЧКОВ НА ИТОГАХ ===== */
-.result-badges {
-  text-align: center;
-  font-size: 0.9rem;
-  color: #975a16;
-  font-weight: 600;
-  margin-bottom: 10px;
-  padding: 6px 12px;
-  background: #fffbeb;
-  border: 1px solid #f6ad55;
-  border-radius: 10px;
-}
-
-/* ===== ЗАЛ СЛАВЫ ===== */
+/* ===== ЗАЛ СЛАВЫ / ПРОФИЛЬ ===== */
 .hall-title {
-  font-family: 'Baloo 2', cursive;
+  font-family: var(--font-display);
   font-size: 1.6rem;
   font-weight: 700;
   text-align: center;
-  color: #744210;
+  color: var(--brand-ink);
   margin-bottom: 12px;
 }
 
 .hall-rank {
+  font-family: var(--font-display);
   font-size: 1.4rem;
   font-weight: 700;
   text-align: center;
-  color: #744210;
+  color: var(--brand-ink);
   margin-bottom: 16px;
 }
 
@@ -802,11 +829,13 @@ h1 {
   margin-bottom: 20px;
 }
 
+/* Статы — bento-карточки */
 .hall-stat {
   flex: 1;
-  background: #fff;
-  border: 2px solid #fde9c0;
-  border-radius: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-card);
+  box-shadow: var(--sh-card);
   padding: 14px 10px;
   text-align: center;
   display: flex;
@@ -815,38 +844,127 @@ h1 {
   gap: 4px;
 }
 
+/* Число в статах — тёплый цвет, объединяем два правила */
 .hall-stat span:first-child {
+  font-family: var(--font-display);
   font-size: 1.4rem;
   font-weight: 700;
-  color: #f6ad55;
+  color: var(--warm);
 }
 
 .hall-stat-label {
   font-size: 0.78rem;
-  color: #6B7280;
+  color: var(--muted);
   font-weight: 500;
 }
 
 .hall-shelf-title {
+  font-family: var(--font-display);
   font-size: 0.95rem;
   font-weight: 700;
-  color: #975a16;
+  color: var(--brand-ink);
   margin-bottom: 12px;
   text-align: center;
 }
 
-/* Полка значков: сетка 2 колонки */
+/* Метка «только чтение» */
+.hall-readonly-label {
+  text-align: center;
+  font-size: 0.82rem;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+/* Кнопка «Зал slavy» (btn-hall) в меню */
+.btn-hall {
+  display: block;
+  width: 100%;
+  margin-bottom: 0;
+}
+
+/* ===== МЕНЮ: ДВЕ КНОПКИ В РЯД ===== */
+.menu-top-buttons {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.menu-top-buttons .btn {
+  flex: 1;
+  font-size: 0.9rem;
+  padding: 13px 10px;
+}
+
+/* ===== ПРОФИЛЬ: ПОЛКА 17 ЗНАЧКОВ БЛОКОВ ===== */
+.blocks-shelf {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+/* Ячейка значка блока — bento */
+.block-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 8px;
+  border-radius: var(--r-card);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: var(--sh-card);
+  text-align: center;
+  cursor: default;
+  transition: border-color 0.15s;
+}
+
+/* Горящий значок — блок с 3 звёздами */
+.block-badge-lit {
+  border-color: var(--warm);
+  background: var(--surface-soft);
+}
+
+/* Потухший значок */
+.block-badge-dim {
+  opacity: 0.55;
+  filter: grayscale(50%);
+}
+
+.block-badge-emoji {
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+.block-badge-name {
+  font-size: 0.72rem;
+  color: var(--brand-ink);
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.block-badge-dim .block-badge-name {
+  color: var(--muted);
+}
+
+.block-badge-stars {
+  font-size: 0.75rem;
+  letter-spacing: 1px;
+}
+
+/* Полка 5 значков: сетка 2 колонки */
 .badges-shelf {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
 }
 
-/* Карточка значка */
+/* Карточка значка — bento */
 .badge-card {
-  background: #fff;
-  border: 2px solid #e2e8f0;
-  border-radius: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-card);
+  box-shadow: var(--sh-card);
   padding: 16px 14px;
   text-align: center;
   display: flex;
@@ -857,8 +975,8 @@ h1 {
 
 /* Полученный значок */
 .badge-card.earned {
-  border-color: #f6ad55;
-  background: #fffbeb;
+  border-color: var(--warm);
+  background: var(--surface-soft);
 }
 
 /* Цель (ещё не получен) */
@@ -872,7 +990,7 @@ h1 {
   line-height: 1;
 }
 
-/* Эмодзи нераскрытого значка — приглушённый */
+/* Эмодзи нераскрытого значка */
 .badge-emoji-goal {
   filter: grayscale(80%);
   opacity: 0.6;
@@ -881,22 +999,22 @@ h1 {
 .badge-name {
   font-size: 0.88rem;
   font-weight: 700;
-  color: #744210;
+  color: var(--brand-ink);
   line-height: 1.3;
 }
 
 .badge-card.goal .badge-name {
-  color: #718096;
+  color: var(--muted);
 }
 
 .badge-date {
   font-size: 0.75rem;
-  color: #975a16;
+  color: var(--warm);
 }
 
 .badge-hint {
   font-size: 0.75rem;
-  color: #6B7280;
+  color: var(--muted);
   font-style: italic;
   line-height: 1.4;
 }
@@ -907,16 +1025,16 @@ h1 {
   top: 12px;
   left: 50%;
   transform: translateX(-50%) translateY(-80px);
-  background: #fff;
-  border: 2px solid #f6ad55;
-  border-radius: 12px;
+  background: var(--surface);
+  border: 2px solid var(--warm);
+  border-radius: var(--r-card);
   padding: 10px 20px;
   font-size: 0.95rem;
   font-weight: 600;
-  color: #744210;
+  color: var(--brand-ink);
   z-index: 9000;
   white-space: nowrap;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  box-shadow: var(--sh-pop);
   pointer-events: none;
 }
 
@@ -967,7 +1085,7 @@ h1 {
 .auth-label {
   font-size: 0.88rem;
   font-weight: 700;
-  color: #975a16;
+  color: var(--brand-ink);
   margin-bottom: 2px;
 }
 
@@ -977,28 +1095,29 @@ h1 {
   width: 100%;
   padding: 16px 18px;
   font-size: 1.1rem;
-  border: 2px solid #fde9c0;
-  border-radius: 12px;
-  background: #fff;
-  color: #2d3748;
+  border: 1.5px solid var(--border-strong);
+  border-radius: var(--r-btn);
+  background: var(--surface);
+  color: var(--text);
   transition: border-color 0.15s;
 }
 
 .auth-input:focus {
-  border-color: #f6ad55;
+  border-color: var(--brand);
 }
 
-/* У инпутов своя оранжевая рамка-индикатор — фиолетовое кольцо лишнее */
+/* У инпутов своя рамка-индикатор — системное кольцо лишнее */
 .auth-input:focus-visible {
   outline: none;
 }
 
 .auth-hint {
   font-size: 0.78rem;
-  color: #6B7280;
+  color: var(--muted);
   margin-top: -4px;
 }
 
+/* Ошибка — оставляем красной (семантика ошибки ввода) */
 .auth-error {
   font-size: 0.88rem;
   color: #e53e3e;
@@ -1015,97 +1134,82 @@ h1 {
   padding: 18px 28px;
 }
 
-/* ===== МЕНЮ: ДВЕ КНОПКИ В РЯД ===== */
-.menu-top-buttons {
+/* ===== ТАБЫ ВЫБОРА РЕЖИМА НА ЭКРАНЕ AUTH ===== */
+.auth-tabs {
   display: flex;
-  gap: 10px;
-  margin-bottom: 16px;
-}
-
-.menu-top-buttons .btn {
-  flex: 1;
-  font-size: 0.9rem;
-  padding: 13px 10px;
-}
-
-/* ===== ПРОФИЛЬ: ПОЛКА 17 ЗНАЧКОВ БЛОКОВ ===== */
-.blocks-shelf {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  flex-direction: row;
   gap: 8px;
-  margin-bottom: 24px;
+  width: 100%;
+  max-width: 360px;
 }
 
-/* Ячейка значка блока */
-.block-badge {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 10px 8px;
-  border-radius: 12px;
-  border: 2px solid #fde9c0;
-  background: #fff;
+/* Неактивный таб */
+.auth-tab {
+  flex: 1;
+  padding: 10px 12px;
+  min-height: 48px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--brand-ink);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
   text-align: center;
-  cursor: default;
-  transition: border-color 0.15s;
 }
 
-/* Горящий значок — блок с 3 звёздами */
-.block-badge-lit {
-  border-color: #f6ad55;
-  background: #fffbeb;
+.auth-tab:hover,
+.auth-tab:focus {
+  border-color: var(--border-strong);
+  background: var(--surface-soft);
 }
 
-/* Потухший значок — блок ещё не на ★★★ */
-.block-badge-dim {
-  opacity: 0.55;
-  filter: grayscale(50%);
+/* Активный таб — бренд-цвет (убран оранжевый градиент) */
+.auth-tab-active {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #fff;
 }
 
-.block-badge-emoji {
-  font-size: 1.6rem;
+.auth-tab-active:hover {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #fff;
+}
+
+/* ===== КНОПКА ЗВУКА ===== */
+.btn-sound {
+  background: transparent;
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-btn);
+  font-size: 1.25rem;
+  cursor: pointer;
+  padding: 0 10px;
+  min-height: 44px;
+  min-width: 44px;
+  transition: border-color 0.15s, background 0.15s;
+  flex-shrink: 0;
   line-height: 1;
 }
 
-.block-badge-name {
-  font-size: 0.72rem;
-  color: #975a16;
-  font-weight: 600;
-  line-height: 1.3;
+.btn-sound:hover,
+.btn-sound:focus {
+  border-color: var(--brand);
+  background: var(--surface-soft);
 }
 
-.block-badge-dim .block-badge-name {
-  color: #6B7280;
-}
-
-.block-badge-stars {
-  font-size: 0.75rem;
-  letter-spacing: 1px;
-}
-
-/* Счётчик «Дней тренировок» в профиле */
-.hall-stat span:first-child {
-  font-size: 1.4rem;
-  font-weight: 700;
-  color: #f6ad55;
-}
-
-/* Метка «только чтение» под заголовком профиля */
-.hall-readonly-label {
-  text-align: center;
-  font-size: 0.82rem;
-  color: #6B7280;
-  margin-bottom: 8px;
+.btn-sound:active {
+  transform: scale(0.96);
 }
 
 /* ===== СТЕНА АКАДЕМИИ ===== */
 .wall-title {
-  font-family: 'Baloo 2', cursive;
+  font-family: var(--font-display);
   font-size: 1.6rem;
   font-weight: 700;
   text-align: center;
-  color: #744210;
+  color: var(--brand-ink);
   margin-bottom: 20px;
 }
 
@@ -1116,22 +1220,22 @@ h1 {
 .wall-section-title {
   font-size: 1rem;
   font-weight: 700;
-  color: #975a16;
+  color: var(--brand-ink);
   margin-bottom: 12px;
   padding-bottom: 4px;
-  border-bottom: 2px solid #fde9c0;
+  border-bottom: 2px solid var(--border);
 }
 
 .wall-loading {
   font-size: 0.9rem;
-  color: #6B7280;
+  color: var(--muted);
   text-align: center;
   padding: 16px 0;
 }
 
 .wall-empty {
   font-size: 0.9rem;
-  color: #6B7280;
+  color: var(--muted);
   text-align: center;
   padding: 16px 0;
 }
@@ -1150,22 +1254,22 @@ h1 {
 .leaderboard-table thead th {
   text-align: left;
   font-weight: 700;
-  color: #975a16;
+  color: var(--brand-ink);
   padding: 6px 10px;
-  border-bottom: 2px solid #fde9c0;
+  border-bottom: 2px solid var(--border);
   white-space: nowrap;
 }
 
 .leaderboard-table tbody td {
   padding: 9px 10px;
-  border-bottom: 1px solid #fef3c7;
-  color: #2d3748;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
 }
 
-/* Топ-3 строки в рейтинге */
-.leaderboard-table tr.lb-first td  { background: #fffbeb; font-weight: 700; }
-.leaderboard-table tr.lb-second td { background: #f7fafc; }
-.leaderboard-table tr.lb-third td  { background: #f7fafc; }
+/* Топ-1 строка */
+.leaderboard-table tr.lb-first td  { background: var(--surface-soft); font-weight: 700; }
+.leaderboard-table tr.lb-second td { background: var(--surface); }
+.leaderboard-table tr.lb-third td  { background: var(--surface); }
 
 .lb-pos {
   font-size: 1.05rem;
@@ -1179,26 +1283,26 @@ h1 {
 
 .lb-pts {
   font-weight: 700;
-  color: #f6ad55;
+  color: var(--warm);
   text-align: right;
   white-space: nowrap;
 }
 
 /* Кликабельное имя в рейтинге и ленте */
 .player-link {
-  color: #744210;
+  color: var(--brand-ink);
   text-decoration: underline;
-  text-decoration-color: #f6ad55;
+  text-decoration-color: var(--warm);
   cursor: pointer;
   font-weight: 600;
   text-underline-offset: 2px;
 }
 
 .player-link:hover {
-  color: #c05621;
+  color: var(--brand);
 }
 
-/* Карточки событий ленты */
+/* Карточки событий ленты — bento */
 .feed-wrap {
   display: flex;
   flex-direction: column;
@@ -1209,9 +1313,10 @@ h1 {
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  background: #fff;
-  border: 1px solid #fde9c0;
-  border-radius: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-card);
+  box-shadow: var(--sh-card);
   padding: 12px 14px;
 }
 
@@ -1226,142 +1331,135 @@ h1 {
   flex: 1;
   font-size: 0.9rem;
   line-height: 1.5;
-  color: #4a5568;
-}
-
-.feed-name {
-  /* стили берёт .player-link */
-}
-
-.feed-text {
-  color: #4a5568;
+  color: var(--text);
 }
 
 .feed-date {
   display: block;
   font-size: 0.75rem;
-  color: #6B7280;
+  color: var(--muted);
   margin-top: 2px;
 }
 
-/* ===== АДАПТИВНОСТЬ: маленький экран — 2 колонки для полки блоков ===== */
+/* ===== ТАБ-БАР ===== */
+.tabbar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 8000;
+  display: flex;
+  justify-content: space-around;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  box-shadow: 0 -2px 12px rgba(28,43,35,.06);
+  padding: 6px 4px env(safe-area-inset-bottom);
+}
+
+.tabbar.hidden { display: none !important; }
+
+.tabbar-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px 4px;
+  min-height: 56px;
+  color: var(--muted);
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: .72rem;
+}
+
+.tabbar-ico { font-size: 1.4rem; line-height: 1; }
+
+.tabbar-btn.active { color: var(--brand); }
+
+/* ===== ЭКРАН «ЕЩЁ» ===== */
+.more-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--brand-ink);
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 1.6rem;
+}
+
+.more-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-card);
+  box-shadow: var(--sh-card);
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+.more-card-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--brand-ink);
+  margin-bottom: 12px;
+  font-size: 1rem;
+}
+
+.more-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 44px;
+}
+
+.more-row-label {
+  font-weight: 700;
+  color: var(--text);
+}
+
+.more-hint {
+  font-size: .85rem;
+  color: var(--muted);
+  line-height: 1.5;
+  margin-top: 8px;
+}
+
+.more-card .btn {
+  margin-bottom: 8px;
+  width: 100%;
+}
+
+/* ===== АДАПТИВНОСТЬ ===== */
 @media (max-width: 400px) {
+  body {
+    padding: 10px;
+  }
+
+  /* Декоративные крупные элементы — можно уменьшать */
+  h1 {
+    font-size: 1.35rem;
+  }
+
+  .ace-big {
+    font-size: 2.8rem;
+  }
+
+  /* Читаемый текст — НЕ уменьшаем на телефоне */
+  /* .question-text, .btn-option, .btn — сохраняются из базовых стилей */
+
+  /* Профиль — 2 колонки для полки блоков на маленьких экранах */
   .blocks-shelf {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* Зал славы — 1 колонка значков */
+  .badges-shelf {
+    grid-template-columns: 1fr;
   }
 
   .menu-top-buttons .btn {
     font-size: 0.8rem;
     padding: 11px 8px;
   }
-}
-
-/* ===== ТАБЫ ВЫБОРА РЕЖИМА НА ЭКРАНЕ AUTH ===== */
-.auth-tabs {
-  display: flex;
-  flex-direction: row;
-  gap: 8px;
-  width: 100%;
-  max-width: 360px;
-}
-
-/* Неактивный таб — бледный */
-.auth-tab {
-  flex: 1;
-  padding: 10px 12px;
-  min-height: 48px;
-  border: 2px solid #fde9c0;
-  border-radius: 10px;
-  background: #fff;
-  color: #975a16;
-  font-size: 0.88rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.15s, border-color 0.15s, color 0.15s;
-  text-align: center;
-}
-
-.auth-tab:hover,
-.auth-tab:focus {
-  border-color: #f6ad55;
-  background: #fffbeb;
-}
-
-/* Активный таб — акцентный, оранжевый */
-.auth-tab-active {
-  background: linear-gradient(135deg, #f6ad55, #ed8936);
-  border-color: #ed8936;
-  color: #fff;
-}
-
-.auth-tab-active:hover {
-  background: linear-gradient(135deg, #ed8936, #dd6b20);
-  border-color: #dd6b20;
-  color: #fff;
-}
-
-/* ===== КНОПКА ВЫХОДА В МЕНЮ ===== */
-/* Компактная, мягкая — не агрессивная, на базе outline */
-.btn-logout {
-  display: block;
-  width: 100%;
-  margin-bottom: 16px;
-  padding: 10px 16px;
-  border: 2px solid #fde9c0;
-  border-radius: 10px;
-  background: transparent;
-  color: #6B7280;
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-  text-align: center;
-  transition: border-color 0.15s, color 0.15s, background 0.15s;
-}
-
-.btn-logout:hover,
-.btn-logout:focus {
-  border-color: #f6ad55;
-  color: #975a16;
-  background: #fffbeb;
-}
-
-.btn-logout:active {
-  transform: scale(0.98);
-}
-
-/* Кнопка входа/регистрации для гостя — приветливее обычного «Выйти» */
-.btn-guest-login {
-  border-color: #f6ad55;
-  color: #975a16;
-}
-
-.btn-guest-login:hover,
-.btn-guest-login:focus {
-  background: #fffbeb;
-}
-
-/* ===== КНОПКА ЗВУКА В МЕНЮ ===== */
-/* Компактная иконка-кнопка рядом с Профилем и Стеной */
-.btn-sound {
-  background: transparent;
-  border: 2px solid #fde9c0;
-  border-radius: 10px;
-  font-size: 1.25rem;
-  cursor: pointer;
-  padding: 0 10px;
-  min-height: 44px;
-  min-width: 44px;
-  transition: border-color 0.15s, background 0.15s;
-  flex-shrink: 0;
-  line-height: 1;
-}
-
-.btn-sound:hover,
-.btn-sound:focus {
-  border-color: #f6ad55;
-  background: #fffbeb;
-}
-
-.btn-sound:active {
-  transform: scale(0.96);
 }

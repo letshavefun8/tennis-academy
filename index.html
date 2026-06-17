@@ -4,11 +4,10 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Академия тенниса</title>
-  <!-- Шрифты: Nunito (основной) + Baloo 2 (заголовки и числа). subset latin+cyrillic -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=8">
+  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=10">
 </head>
 <body>
 
@@ -102,13 +101,7 @@
     <div class="menu-top-buttons">
       <button id="btn-hall" class="btn btn-outline btn-hall">🏆 Профиль</button>
       <button id="btn-wall" class="btn btn-outline btn-wall">📣 Стена академии</button>
-      <button id="btn-sound" class="btn-sound" title="Звук вкл/выкл">🔇</button>
     </div>
-
-    <!-- Кнопка выхода из аккаунта (видна только при наличии аккаунта) -->
-    <button id="btn-logout" class="btn-logout hidden">Выйти 🚪</button>
-    <!-- Кнопка входа/регистрации для гостя (видна, если аккаунта нет, а облако настроено) -->
-    <button id="btn-guest-login" class="btn-logout btn-guest-login hidden">Войти или зарегистрироваться 🎾</button>
 
     <!-- Тренировка дня -->
     <button id="btn-daily" class="btn btn-accent btn-daily">⚡ Тренировка дня</button>
@@ -266,6 +259,25 @@
     </div>
   </div>
 
+  <!-- ===== ЭКРАН 7: ЕЩЁ ===== -->
+  <div id="screen-more" class="screen hidden">
+    <h2 class="more-title">⚙️ Ещё</h2>
+    <div class="more-card"><div class="more-row"><span class="more-row-label">Звук</span><button id="btn-sound" class="btn-sound" title="Звук вкл/выкл">🔇</button></div></div>
+    <div class="more-card" id="more-account-card"><p class="more-card-title">Аккаунт</p>
+      <button id="btn-logout" class="btn btn-outline hidden">Выйти 🚪</button>
+      <button id="btn-guest-login" class="btn btn-outline hidden">Войти или зарегистрироваться 🎾</button>
+      <p id="more-account-hint" class="more-hint"></p></div>
+    <div class="more-card"><p class="more-card-title">О приложении</p><p class="more-hint">Академия тенниса — тренажёр для юных теннисистов. Маскот Эйс 🎾 помогает разбирать ситуации на корте.</p></div>
+  </div>
+
+  <!-- ===== ТАБ-БАР ===== -->
+  <nav id="tabbar" class="tabbar hidden">
+    <button class="tabbar-btn" data-screen="menu"><span class="tabbar-ico">🎾</span><span class="tabbar-lbl">Играть</span></button>
+    <button class="tabbar-btn" data-screen="hall"><span class="tabbar-ico">🏆</span><span class="tabbar-lbl">Профиль</span></button>
+    <button class="tabbar-btn" data-screen="wall"><span class="tabbar-ico">📣</span><span class="tabbar-lbl">Стена</span></button>
+    <button class="tabbar-btn" data-screen="more"><span class="tabbar-ico">⚙️</span><span class="tabbar-lbl">Ещё</span></button>
+  </nav>
+
   <!-- Тост для значков -->
   <div id="badge-toast" class="badge-toast hidden"></div>
 
@@ -274,10 +286,10 @@
 
   <!-- ===== СКРИПТЫ: данные и облако — ДО app.js ===== -->
   <!-- Сетевой слой (Yandex Cloud backend, доступен в РФ) -->
-  <script src="cloud.js?v=9"></script>
+  <script src="cloud.js?v=10"></script>
   <!-- Данные вопросов -->
-  <script src="questions.js?v=9"></script>
+  <script src="questions.js?v=10"></script>
   <!-- Логика приложения -->
-  <script src="app.js?v=9"></script>
+  <script src="app.js?v=10"></script>
 </body>
 </html>

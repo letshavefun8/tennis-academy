@@ -6,7 +6,7 @@
 
 // Версия сборки — меняется при каждом деплое, видна внизу экрана.
 // Помогает убедиться, что на боевой сайт долетела свежая версия.
-var APP_VERSION = 'сборка 9 · 17.06';
+var APP_VERSION = 'сборка 10 · 17.06';
 
 // Показываем версию внизу страницы
 (function showVersion() {
@@ -292,6 +292,8 @@ var elResultsScreen       = document.getElementById('screen-results');
 var elConfettiLayer       = document.getElementById('confetti-layer');
 var elAuthScreen          = document.getElementById('screen-auth');
 var elWallScreen          = document.getElementById('screen-wall');
+var elMoreScreen          = document.getElementById('screen-more');
+var elTabbar              = document.getElementById('tabbar');
 
 // Онбординг
 var elAceOnboardingBubble = document.getElementById('ace-onboarding-bubble');
@@ -668,7 +670,27 @@ function starsHtml(count) {
 // =====================================================
 // СМЕНА ЭКРАНОВ
 // =====================================================
+
+// Экраны, для которых показывается таб-бар
+var TABBAR_SCREENS = ['menu', 'hall', 'wall', 'more'];
+
+/** Подсвечивает активный таб и показывает/скрывает таб-бар */
+function updateTabbar(name) {
+  if (!elTabbar) return;
+  elTabbar.classList.toggle('hidden', TABBAR_SCREENS.indexOf(name) === -1);
+  var btns = elTabbar.querySelectorAll('.tabbar-btn');
+  for (var i = 0; i < btns.length; i++) {
+    btns[i].classList.toggle('active', btns[i].getAttribute('data-screen') === name);
+  }
+}
+
 function showScreen(name) {
+  // Уходим со Стены через любой способ — отписываемся от live-ленты
+  if (name !== 'wall' && feedUnsubscribe) {
+    feedUnsubscribe();
+    feedUnsubscribe = null;
+  }
+
   elAuthScreen.classList.toggle('hidden', name !== 'auth');
   elOnboardingScreen.classList.toggle('hidden', name !== 'onboarding');
   elMenuScreen.classList.toggle('hidden', name !== 'menu');
@@ -676,6 +698,10 @@ function showScreen(name) {
   elResultsScreen.classList.toggle('hidden', name !== 'results');
   elHallScreen.classList.toggle('hidden', name !== 'hall');
   elWallScreen.classList.toggle('hidden', name !== 'wall');
+  if (elMoreScreen) elMoreScreen.classList.toggle('hidden', name !== 'more');
+
+  // Обновляем таб-бар
+  updateTabbar(name);
 }
 
 // =====================================================
@@ -737,7 +763,7 @@ function renderQuestion() {
       var btn = document.createElement('button');
       btn.className = 'btn-option';
       btn.innerHTML =
-        '<span class="option-letter">' + optionLetter(idx) + ')</span>' +
+        '<span class="option-letter">' + optionLetter(idx) + '</span>' +
         '<span class="option-text">' + escapeHtml(opt.text) + '</span>';
       btn.addEventListener('click', function() {
         handleAnswer(idx, opt.isCorrect, q, shuffledOptions, isRetry);
@@ -1164,19 +1190,46 @@ function buildMenu() {
   buildSectionCards('court',   document.getElementById('cards-court'));
   buildSectionCards('review',  document.getElementById('cards-review'));
   buildSectionCards('courses', document.getElementById('cards-courses'));
+  // Кнопки аккаунта переехали в экран «Ещё» (buildMore)
+}
 
-  // Есть аккаунт → кнопка «Выйти»; гость при настроенном облаке →
-  // кнопка «Войти или зарегистрироваться» (без облака регистрация невозможна).
+// =====================================================
+// ЭКРАН «ЕЩЁ»
+// =====================================================
+
+/**
+ * Заполняет экран «Ещё»: иконку звука и кнопки аккаунта.
+ * Вызывается при переходе на этот экран через таб-бар.
+ */
+function buildMore() {
+  // Иконка звука (кнопка находится на экране «Ещё»)
+  updateSoundIcon();
+
+  var acct = loadAccount();
   var cloudConfigured = (typeof CLOUD_BACKEND_URL !== 'undefined' && CLOUD_BACKEND_URL);
+  var elLogout = document.getElementById('btn-logout');
+  var elGuestLogin = document.getElementById('btn-guest-login');
+  var elHint = document.getElementById('more-account-hint');
+
   if (acct) {
-    elBtnLogout.classList.remove('hidden');
-    elBtnGuestLogin.classList.add('hidden');
+    // Есть аккаунт — показываем «Выйти»
+    if (elLogout) elLogout.classList.remove('hidden');
+    if (elGuestLogin) elGuestLogin.classList.add('hidden');
+    if (elHint) elHint.textContent = 'Ты вошёл как ' + acct.name + '.';
   } else {
-    elBtnLogout.classList.add('hidden');
-    if (cloudConfigured) {
-      elBtnGuestLogin.classList.remove('hidden');
-    } else {
-      elBtnGuestLogin.classList.add('hidden');
+    // Гость
+    if (elLogout) elLogout.classList.add('hidden');
+    if (elGuestLogin) {
+      if (cloudConfigured) {
+        elGuestLogin.classList.remove('hidden');
+      } else {
+        elGuestLogin.classList.add('hidden');
+      }
+    }
+    if (elHint) {
+      elHint.textContent = cloudConfigured
+        ? 'Ты играешь как гость. Войди, чтобы сохранить прогресс!'
+        : 'Облако не настроено — прогресс сохраняется только на этом устройстве.';
     }
   }
 }
@@ -2026,11 +2079,13 @@ elBtnWallBack.addEventListener('click', function() {
 });
 
 // «Выйти» — выход из аккаунта
-elBtnLogout.addEventListener('click', function() {
-  cloudSignOut().then(function() {
-    showAuthScreen('login');
+if (elBtnLogout) {
+  elBtnLogout.addEventListener('click', function() {
+    cloudSignOut().then(function() {
+      showAuthScreen('login');
+    });
   });
-});
+}
 
 // Гость нажимает «Войти или зарегистрироваться» — ведём на экран auth.
 // По умолчанию вкладка регистрации (локальный прогресс мигрирует в новый
@@ -2038,6 +2093,30 @@ elBtnLogout.addEventListener('click', function() {
 if (elBtnGuestLogin) {
   elBtnGuestLogin.addEventListener('click', function() {
     showAuthScreen('register');
+  });
+}
+
+// =====================================================
+// ОБРАБОТЧИКИ ТАБ-БАРА
+// =====================================================
+
+if (elTabbar) {
+  elTabbar.querySelectorAll('.tabbar-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var screen = btn.getAttribute('data-screen');
+      if (screen === 'menu') {
+        buildMenu();
+        showScreen('menu');
+      } else if (screen === 'hall') {
+        renderHall();
+        showScreen('hall');
+      } else if (screen === 'wall') {
+        openWall();
+      } else if (screen === 'more') {
+        buildMore();
+        showScreen('more');
+      }
+    });
   });
 }
 
