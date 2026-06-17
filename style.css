@@ -64,6 +64,12 @@ body {
   padding: 16px 16px 88px;
 }
 
+/* На экране вопроса добавляем отступ снизу под фиксированную кнопку «Дальше»:
+   ~80px кнопка + 10px зазор + safe-area. На других экранах этот стиль не нужен. */
+#screen-question {
+  padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
+}
+
 .hidden {
   display: none !important;
 }
@@ -432,15 +438,17 @@ h1 {
 /* ===== ТОЧКИ-ШАГИ ===== */
 .step-dots {
   display: flex;
-  gap: 6px;
+  gap: 5px;
   justify-content: center;
-  margin-bottom: 8px;
+  /* Уменьшено с 8px → 4px для уплотнения верха на мобильном */
+  margin-bottom: 4px;
   flex-wrap: wrap;
 }
 
 .dot {
-  width: 12px;
-  height: 12px;
+  /* Уменьшено с 12px → 10px для уплотнения — остаётся читаемым */
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   display: inline-block;
   transition: background 0.3s ease;
@@ -465,16 +473,18 @@ h1 {
   text-align: center;
   font-size: 0.85rem;
   color: var(--muted);
-  margin-bottom: 10px;
+  /* Уменьшено с 10px → 6px */
+  margin-bottom: 6px;
 }
 
 /* ===== ПЛАШКИ СТАВКИ И СЕРИИ ===== */
 .badges-row {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   justify-content: center;
   align-items: center;
-  margin-bottom: 14px;
+  /* Уменьшено с 14px → 8px */
+  margin-bottom: 8px;
   flex-wrap: wrap;
 }
 
@@ -483,8 +493,9 @@ h1 {
   border: 1px solid var(--border-strong);
   color: var(--brand-ink);
   border-radius: var(--r-pill);
-  padding: 4px 12px;
-  font-size: 0.88rem;
+  /* Уменьшен вертикальный padding: 4px → 3px */
+  padding: 3px 10px;
+  font-size: 0.82rem;
   font-weight: 600;
 }
 
@@ -493,8 +504,9 @@ h1 {
   border: 1px solid var(--warm);
   color: #9A5B12;
   border-radius: var(--r-pill);
-  padding: 4px 12px;
-  font-size: 0.88rem;
+  /* Уменьшен вертикальный padding: 4px → 3px */
+  padding: 3px 10px;
+  font-size: 0.82rem;
   font-weight: 700;
 }
 
@@ -504,8 +516,9 @@ h1 {
   border: 1px solid var(--border);
   border-radius: var(--r-card);
   box-shadow: var(--sh-card);
-  padding: 18px 20px;
-  margin-bottom: 16px;
+  /* Уменьшен vertical padding: 18px → 12px; margin: 16px → 10px */
+  padding: 12px 16px;
+  margin-bottom: 10px;
 }
 
 .question-text {
@@ -519,29 +532,31 @@ h1 {
 .options-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  margin-bottom: 18px;
+  /* Уменьшен gap: 12px → 8px; margin: 18px → 10px */
+  gap: 8px;
+  margin-bottom: 10px;
 }
 
 /* Кнопка варианта — как .opt в эталоне */
 .btn-option {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   text-align: left;
   width: 100%;
   background: var(--surface);
   border: 1.5px solid var(--border);
   border-radius: var(--r-card);
   box-shadow: var(--sh-card);
-  padding: 16px;
-  min-height: 64px;
+  /* Уменьшен padding: 16px → 11px; min-height: 64px → 52px */
+  padding: 11px 14px;
+  min-height: 52px;
   cursor: pointer;
   font-family: var(--font-body);
   font-size: 1.0625rem;
   font-weight: 600;
   color: var(--text);
-  line-height: 1.5;
+  line-height: 1.4;
   transition: border-color 0.15s, background 0.15s, transform 0.08s;
 }
 
@@ -629,9 +644,11 @@ h1 {
   border: 1px solid var(--border);
   border-left: 4px solid var(--brand);
   border-radius: var(--r-card);
-  padding: 16px;
+  /* Уменьшен vertical padding: 16px → 12px; margin: 18px → 8px
+     (кнопка «Дальше» теперь фиксированная — большой отступ не нужен) */
+  padding: 12px 14px;
   box-shadow: var(--sh-card);
-  margin-bottom: 18px;
+  margin-bottom: 8px;
   line-height: 1.6;
   align-items: flex-start;
 }
@@ -663,9 +680,25 @@ h1 {
   color: var(--text);
 }
 
-/* ===== КНОПКА «ДАЛЬШЕ» ===== */
+/* ===== КНОПКА «ДАЛЬШЕ» — фиксирована внизу (паттерн Duolingo) ===== */
+/* Кнопка прилипает к низу экрана и всегда видна без прокрутки после ответа.
+   Нижний таб-бар скрыт на экране вопроса, поэтому конфликта нет. */
 .next-btn-wrap {
-  text-align: center;
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 500;
+  padding: 10px 16px;
+  /* Запас для iPhone с нотчем снизу */
+  padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+}
+
+.next-btn-wrap .btn {
+  max-width: 480px;
+  margin: 0 auto;
 }
 
 /* ===== БАЗОВЫЕ КНОПКИ ===== */
@@ -864,7 +897,8 @@ h1 {
 .question-topbar {
   display: flex;
   align-items: center;
-  margin-bottom: 8px;
+  /* Уменьшено с 8px → 4px для уплотнения верха на экране вопроса */
+  margin-bottom: 4px;
 }
 
 /* Кнопка «← В Академию» */
