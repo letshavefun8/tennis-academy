@@ -6,13 +6,81 @@
 
 // Версия сборки — меняется при каждом деплое, видна внизу экрана.
 // Помогает убедиться, что на боевой сайт долетела свежая версия.
-var APP_VERSION = 'сборка 11 · 17.06';
+var APP_VERSION = 'сборка 12 · 17.06';
 
 // Показываем версию внизу страницы
 (function showVersion() {
   var el = document.getElementById('app-version');
   if (el) el.textContent = APP_VERSION;
 })();
+
+// =====================================================
+// МАСКОТ ЭЙС — SVG-мяч с лицом (4 выражения)
+// =====================================================
+
+/**
+ * Возвращает строку инлайнового SVG для маскота Эйса.
+ * expr: 'hello' | 'happy' | 'think' | 'wow'
+ */
+function aceSvg(expr) {
+  // Базовые элементы: тело мяча, два белых шва
+  var base =
+    '<circle cx="50" cy="50" r="46" fill="#C7E03A" stroke="#A8C72A" stroke-width="3"/>' +
+    '<path d="M14 30 Q50 50 14 70" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"/>' +
+    '<path d="M86 30 Q50 50 86 70" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"/>';
+
+  var face = '';
+
+  if (expr === 'happy') {
+    // Зажмуренные глаза-дуги, широкая улыбка, 2 лаймовые искорки
+    face =
+      '<path d="M33 47 Q38 42 43 47" fill="none" stroke="#2C3A00" stroke-width="3" stroke-linecap="round"/>' +
+      '<path d="M57 47 Q62 42 67 47" fill="none" stroke="#2C3A00" stroke-width="3" stroke-linecap="round"/>' +
+      '<path d="M36 60 Q50 74 64 60" fill="none" stroke="#2C3A00" stroke-width="4" stroke-linecap="round"/>' +
+      '<text x="18" y="42" font-size="10" fill="#A8C72A">✦</text>' +
+      '<text x="72" y="42" font-size="10" fill="#A8C72A">✦</text>';
+  } else if (expr === 'think') {
+    // Глаза нормальные, волнистый рот, приподнятая левая бровь
+    face =
+      '<circle cx="38" cy="46" r="6" fill="#2C3A00"/>' +
+      '<circle cx="62" cy="46" r="6" fill="#2C3A00"/>' +
+      '<circle cx="40" cy="44" r="2" fill="#fff"/>' +
+      '<circle cx="64" cy="44" r="2" fill="#fff"/>' +
+      '<path d="M33 36 Q38 33 43 35" fill="none" stroke="#2C3A00" stroke-width="3" stroke-linecap="round"/>' +
+      '<path d="M38 64 Q44 60 50 64 Q56 68 62 64" fill="none" stroke="#2C3A00" stroke-width="4" stroke-linecap="round"/>';
+  } else if (expr === 'wow') {
+    // Широкие глаза с крупными бликами, рот-кружок, 3 звёздочки сверху
+    face =
+      '<circle cx="38" cy="46" r="7" fill="#2C3A00"/>' +
+      '<circle cx="62" cy="46" r="7" fill="#2C3A00"/>' +
+      '<circle cx="40" cy="43" r="2.5" fill="#fff"/>' +
+      '<circle cx="64" cy="43" r="2.5" fill="#fff"/>' +
+      '<ellipse cx="50" cy="64" rx="6" ry="8" fill="#2C3A00"/>' +
+      '<text x="26" y="18" font-size="9" fill="#A8C72A">★</text>' +
+      '<text x="44" y="14" font-size="9" fill="#A8C72A">★</text>' +
+      '<text x="62" y="18" font-size="9" fill="#A8C72A">★</text>';
+  } else {
+    // 'hello' — нейтральная спокойная улыбка (дефолт)
+    face =
+      '<circle cx="38" cy="46" r="6" fill="#2C3A00"/>' +
+      '<circle cx="62" cy="46" r="6" fill="#2C3A00"/>' +
+      '<circle cx="40" cy="44" r="2" fill="#fff"/>' +
+      '<circle cx="64" cy="44" r="2" fill="#fff"/>' +
+      '<path d="M38 62 Q50 72 62 62" fill="none" stroke="#2C3A00" stroke-width="4" stroke-linecap="round"/>';
+  }
+
+  return '<svg viewBox="0 0 100 100" class="ace-svg" role="img" aria-label="Эйс">' +
+    base + face + '</svg>';
+}
+
+/**
+ * Устанавливает SVG-маскота в контейнер.
+ * el — DOM-элемент контейнера, expr — выражение маскота.
+ */
+function setAce(el, expr) {
+  if (!el) return;
+  el.innerHTML = aceSvg(expr);
+}
 
 // Проверяем, что данные подключены (questions.js загружен до app.js)
 if (typeof QUESTION_BANK === 'undefined') {
@@ -924,6 +992,8 @@ function handleAnswer(clickedIdx, isCorrect, q, shuffledOptions, isRetry) {
     playCorrect(); // звук верного ответа
     var aceInline = elExplanationWrap.querySelector('.ace-inline');
     if (aceInline) {
+      // Устанавливаем выражение маскота: радость при верном ответе
+      setAce(aceInline, 'happy');
       aceInline.classList.add('ace-bounce');
       aceInline.addEventListener('animationend', function () {
         aceInline.classList.remove('ace-bounce');
@@ -931,6 +1001,11 @@ function handleAnswer(clickedIdx, isCorrect, q, shuffledOptions, isRetry) {
     }
   } else {
     playWrong(); // мягкий звук неверного ответа
+    var aceInlineWrong = elExplanationWrap.querySelector('.ace-inline');
+    if (aceInlineWrong) {
+      // Подбадривающее «думающее» выражение при неверном ответе
+      setAce(aceInlineWrong, 'think');
+    }
   }
 
   // Обновляем точки
@@ -1098,6 +1173,16 @@ function showResults() {
 
   elAceResultsBubble.textContent = aceReply;
 
+  // Устанавливаем выражение маскота на экране итогов
+  var aceResults = document.getElementById('ace-results');
+  if (gotNewRank || (session.newBadges && session.newBadges.length > 0)) {
+    setAce(aceResults, 'wow');
+  } else if (ratio >= 0.55) {
+    setAce(aceResults, 'happy');
+  } else {
+    setAce(aceResults, 'think');
+  }
+
   // Очки сессии — анимируем count-up от 0 до N за ~700ms
   animateCountUp(elResultPoints, session.sessionPoints);
 
@@ -1188,6 +1273,10 @@ function renderRankProgress(container) {
 function buildMenu() {
   // Актуальная иконка кнопки звука
   updateSoundIcon();
+
+  // Устанавливаем маскота в меню
+  var aceMenuEl = document.querySelector('#screen-menu .ace-big');
+  setAce(aceMenuEl, 'hello');
 
   // Случайная реплика Эйса
   elAceMenuBubble.textContent = pickRandom(ACE_MENU);
@@ -1408,33 +1497,71 @@ function renderHall(playerData) {
   }
 }
 
-/** Строит карточки блоков для одной секции */
+/**
+ * Строит карточки блоков для одной секции в виде сетки узлов-кружков.
+ * Состояния: is-done (пройден), is-current (первый с 0 звёзд), is-todo (остальные).
+ */
 function buildSectionCards(sectionName, container) {
   container.innerHTML = '';
+
+  // Собираем все блоки секции в порядке их blockId, чтобы найти «текущий»
+  var sectionBlocks = [];
   for (var blockId = 0; blockId <= 16; blockId++) {
     var display = BLOCK_DISPLAY[blockId];
     if (!display || display.section !== sectionName) continue;
+    sectionBlocks.push(blockId);
+  }
 
-    // Замыкание для blockId
+  // Определяем первый блок с 0 звёзд — он «текущий»
+  var currentBid = -1;
+  for (var si = 0; si < sectionBlocks.length; si++) {
+    if (getBlockStars(sectionBlocks[si]) === 0) {
+      currentBid = sectionBlocks[si];
+      break;
+    }
+  }
+
+  for (var si2 = 0; si2 < sectionBlocks.length; si2++) {
+    // Замыкание для bid
     (function(bid) {
       var blockQuestions = QUESTION_BANK.questions.filter(function(q) {
         return q.blockId === bid;
       });
 
-      var card = document.createElement('button');
-      card.className = 'block-card';
-
       var stars = getBlockStars(bid);
+
+      // Определяем состояние узла
+      var stateClass = '';
+      if (stars >= 1) {
+        stateClass = 'is-done';
+      } else if (bid === currentBid) {
+        stateClass = 'is-current';
+      } else {
+        stateClass = 'is-todo';
+      }
+      // Дополнительный класс для 3 звёзд
+      if (stars === 3) stateClass += ' is-perfect';
+
+      // Парсинг: первый токен (эмодзи) в кружок, остаток — подпись
+      var label = BLOCK_DISPLAY[bid].label;
+      var spaceIdx = label.indexOf(' ');
+      var blockEmoji = spaceIdx > -1 ? label.slice(0, spaceIdx) : label;
+      var blockName  = spaceIdx > -1 ? label.slice(spaceIdx + 1) : '';
+
+      var card = document.createElement('button');
+      // Сохраняем .block-card для совместимости с остальным кодом
+      card.className = 'block-card level-node ' + stateClass;
       card.innerHTML =
-        '<span class="card-label">' + escapeHtml(BLOCK_DISPLAY[bid].label) + '</span>' +
-        '<span class="card-stars">' + starsHtml(stars) + '</span>';
+        '<span class="level-node-icon">' + blockEmoji + '</span>' +
+        '<span class="level-node-name">' + escapeHtml(blockName) + '</span>' +
+        '<span class="level-node-stars">' + starsHtml(stars) + '</span>';
 
       card.addEventListener('click', function() {
         startSession('block', blockQuestions, bid);
       });
 
       container.appendChild(card);
-    })(blockId);
+    })(sectionBlocks[si2]);
   }
 }
 
@@ -1443,6 +1570,9 @@ function buildSectionCards(sectionName, container) {
 // =====================================================
 function buildOnboarding() {
   elAceOnboardingBubble.textContent = ACE_ONBOARD_HELLO;
+  // Устанавливаем маскота на экране онбординга
+  var aceOnboarding = document.getElementById('ace-onboarding');
+  setAce(aceOnboarding, 'hello');
 }
 
 function startOnboarding() {
@@ -1507,6 +1637,9 @@ function showOnboardingResults() {
 
   elResultTitle.textContent = '🎉 Зачислен в Академию!';
   elAceResultsBubble.textContent = ACE_ONBOARD_DONE;
+  // Новый значок — маскот в восторге
+  var aceResultsOnboard = document.getElementById('ace-results');
+  setAce(aceResultsOnboard, 'wow');
   animateCountUp(elResultPoints, session.sessionPoints);
   elResultStreak.classList.add('hidden');
   elResultBadges.classList.add('hidden');
@@ -1681,6 +1814,10 @@ function openPlayerProfile(uid) {
  */
 function showAuthScreen(mode) {
   var isLogin = (mode === 'login');
+
+  // Устанавливаем маскота на экране аутентификации
+  var aceAuthEl = document.querySelector('#screen-auth .ace-big');
+  setAce(aceAuthEl, 'hello');
 
   // Переключаем видимость форм и активность табов
   if (isLogin) {
