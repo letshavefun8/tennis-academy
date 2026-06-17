@@ -1639,8 +1639,10 @@ var loginLockTimer = null;
 
 /**
  * Возвращает мягкую реплику Эйса по коду ошибки Firebase Auth.
+ * rawMsg — необязательное сырое сообщение; для неизвестных ошибок
+ * показываем технический код/текст прямо на экране (диагностика на телефоне).
  */
-function mapAuthError(code) {
+function mapAuthError(code, rawMsg) {
   switch (code) {
     case 'auth/email-already-in-use':
       return 'Ой, это имя уже занято! Попробуй другое или войди во вкладке «У меня есть аккаунт» 🎾';
@@ -1661,7 +1663,10 @@ function mapAuthError(code) {
     case 'auth/operation-not-allowed':
     case 'auth/weak-password':
     default:
-      return 'Что-то пошло не так. Попробуй ещё раз.';
+      // Неизвестная ошибка — показываем технический код/текст для диагностики
+      var detail = code || '';
+      if (rawMsg && rawMsg !== code) detail += (detail ? ' — ' : '') + rawMsg;
+      return 'Что-то пошло не так. Попробуй ещё раз.' + (detail ? ' [' + detail + ']' : '');
   }
 }
 
@@ -1773,7 +1778,7 @@ document.getElementById('btn-auth-submit').addEventListener('click', function() 
     } else {
       // Мягкая реплика Эйса по коду ошибки; если кода нет —
       // показываем конкретный текст серверной валидации
-      errEl.textContent = result.code ? mapAuthError(result.code) : (result.error || 'Ошибка. Попробуй ещё раз.');
+      errEl.textContent = result.code ? mapAuthError(result.code, result.error) : (result.error || 'Ошибка. Попробуй ещё раз.');
       errEl.classList.remove('hidden');
     }
   });
@@ -1825,7 +1830,7 @@ elBtnLoginSubmit.addEventListener('click', function() {
         }, 30000);
       }
 
-      elLoginError.textContent = mapAuthError(result.code);
+      elLoginError.textContent = mapAuthError(result.code, result.error);
       elLoginError.classList.remove('hidden');
     }
   });
