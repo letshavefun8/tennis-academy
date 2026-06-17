@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Эталонный экран — Академия тенниса</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   ДИЗАЙН-СИСТЕМА «Академии тенниса» (утверждено) — токены
+   Корт-грин + теннисный лайм. Unbounded + Nunito. Bento-карточки.
+   ============================================================ */
+:root{
+  /* фон и поверхности */
+  --bg:#FBF7EF; --surface:#FFFFFF; --surface-soft:#F4EFE4;
+  /* бренд / акцент / награды */
+  --brand:#1F6F50; --brand-ink:#134B36;
+  --accent:#C7E03A; --accent-ink:#2C3A00; --accent-deep:#A8C72A;
+  --warm:#F2A03D;
+  /* семантика */
+  --success:#2E9E5B; --success-bg:#E9F7EE;
+  --gentle:#6B7A86; --gentle-bg:#F0F2F4;
+  /* текст / границы */
+  --text:#1C2B23; --muted:#5E6B63;
+  --border:#E7E1D4; --border-strong:#D4CCBA;
+  /* радиусы / отступы / тени */
+  --r-card:16px; --r-btn:14px; --r-pill:999px; --r-sm:10px;
+  --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:20px; --s6:24px; --s8:32px;
+  --sh-card:0 1px 2px rgba(28,43,35,.04),0 4px 12px rgba(28,43,35,.06);
+  --sh-pop:0 6px 20px rgba(28,43,35,.10);
+  --sh-brand:0 6px 16px rgba(31,111,80,.18);
+  --font-display:'Unbounded',system-ui,sans-serif;
+  --font-body:'Nunito',system-ui,sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:var(--font-body);
+  background:linear-gradient(170deg,#FBF7EF 0%,#FaF5E9 60%,#FBF6EC 100%);
+  color:var(--text); min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+}
+:focus-visible{outline:3px solid var(--brand); outline-offset:2px}
+
+.screen{max-width:480px; margin:0 auto; padding:var(--s4) var(--s4) 40px; min-height:100vh}
+
+/* ---------- топбар: назад + прогресс ---------- */
+.topbar{display:flex; align-items:center; gap:var(--s3); margin-bottom:var(--s4)}
+.btn-ghost{
+  font-family:var(--font-body); font-weight:700; font-size:.95rem;
+  color:var(--muted); background:none; border:none; cursor:pointer;
+  padding:10px 10px 10px 0; min-height:44px;
+}
+.btn-ghost:hover{color:var(--brand)}
+.dots{display:flex; gap:6px; flex:1; justify-content:center; flex-wrap:wrap}
+.dot{width:9px; height:9px; border-radius:999px; background:#E3DCCD}
+.dot.done{background:var(--success)}
+.dot.cur{background:var(--warm); box-shadow:0 0 0 3px rgba(242,160,61,.2)}
+
+.counter{font-size:.82rem; color:var(--muted); font-weight:700; text-align:center; margin-bottom:var(--s4)}
+
+/* ---------- плашки-pill ---------- */
+.pills{display:flex; gap:var(--s2); justify-content:center; margin-bottom:var(--s4); flex-wrap:wrap}
+.pill{
+  border-radius:var(--r-pill); padding:6px 14px; font-weight:700; font-size:.85rem;
+  display:inline-flex; align-items:center; gap:6px;
+}
+.pill-stake{background:var(--surface); border:1px solid var(--border-strong); color:var(--brand-ink)}
+.pill-streak{background:#FFF1DF; border:1px solid var(--warm); color:#9A5B12}
+
+/* ---------- карточка вопроса (bento) ---------- */
+.q-card{
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--r-card);
+  padding:var(--s5); box-shadow:var(--sh-card); margin-bottom:var(--s5);
+}
+.q-topic{
+  font-size:.72rem; font-weight:800; letter-spacing:.06em; text-transform:uppercase;
+  color:var(--brand); margin-bottom:var(--s2);
+}
+.q-text{font-size:1.1875rem; line-height:1.55; font-weight:600; color:var(--text)}
+
+/* ---------- варианты (крупные карточки) ---------- */
+.options{display:flex; flex-direction:column; gap:var(--s3); margin-bottom:var(--s5)}
+.opt{
+  display:flex; align-items:center; gap:var(--s3); text-align:left; width:100%;
+  background:var(--surface); border:1.5px solid var(--border); border-radius:var(--r-card);
+  padding:var(--s4); min-height:64px; cursor:pointer;
+  font-family:var(--font-body); font-size:1.0625rem; font-weight:600; color:var(--text);
+  box-shadow:var(--sh-card); transition:border-color .15s, background .15s, transform .08s;
+}
+.opt:hover{border-color:var(--border-strong)}
+.opt:active{transform:scale(.99)}
+.opt .letter{
+  flex:0 0 auto; width:34px; height:34px; border-radius:50%;
+  display:grid; place-items:center; font-family:var(--font-display); font-weight:700; font-size:.95rem;
+  background:var(--surface-soft); color:var(--brand-ink); transition:background .15s,color .15s;
+}
+.opt .otext{flex:1}
+.opt .mark{flex:0 0 auto; font-size:1.2rem; opacity:0; transition:opacity .2s}
+
+/* состояния после ответа */
+.opt.correct{border-color:var(--success); background:var(--success-bg)}
+.opt.correct .letter{background:var(--success); color:#fff}
+.opt.correct .mark{opacity:1}
+.opt.notbest{border-color:var(--gentle); background:var(--gentle-bg); opacity:.85}
+.opt.notbest .letter{background:var(--gentle); color:#fff}
+.opt.notbest .mark{opacity:1}
+.options.answered .opt{cursor:default}
+.options.answered .opt:not(.correct):not(.notbest){opacity:.55}
+
+@keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.03)}100%{transform:scale(1)}}
+.opt.pop{animation:pop .4s ease-out}
+
+/* ---------- объяснение Эйса ---------- */
+.explain{
+  display:none; gap:var(--s3); background:var(--surface); border:1px solid var(--border);
+  border-left:4px solid var(--brand); border-radius:var(--r-card); padding:var(--s4);
+  box-shadow:var(--sh-card); margin-bottom:var(--s5);
+}
+.explain.show{display:flex; animation:rise .3s ease-out}
+@keyframes rise{from{opacity:0; transform:translateY(8px)}to{opacity:1; transform:none}}
+.ace{font-size:2rem; line-height:1; flex:0 0 auto}
+.explain .reaction{font-family:var(--font-display); font-weight:700; color:var(--brand); margin-bottom:var(--s1); font-size:1.05rem}
+.explain .ex-label{font-size:.72rem; font-weight:800; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); margin-bottom:4px}
+.explain .ex-text{font-size:1rem; line-height:1.5; color:var(--text)}
+
+/* ---------- кнопка «Дальше» (лайм) ---------- */
+.cta{
+  display:none; width:100%; font-family:var(--font-display); font-weight:700; font-size:1.1rem;
+  color:var(--accent-ink); background:var(--accent); border:none; border-radius:var(--r-btn);
+  padding:16px; min-height:56px; cursor:pointer; box-shadow:0 6px 16px rgba(168,199,42,.35);
+  transition:transform .08s, background .15s;
+}
+.cta.show{display:block; animation:rise .3s ease-out}
+.cta:hover{background:var(--accent-deep)}
+.cta:active{transform:translateY(1px) scale(.99)}
+
+/* подпись превью */
+.preview-tag{position:fixed; bottom:6px; right:10px; font-size:.7rem; color:#B9A06A; opacity:.7}
+</style>
+</head>
+<body>
+  <div class="screen">
+
+    <div class="topbar">
+      <button class="btn-ghost">← Выйти</button>
+      <div class="dots">
+        <span class="dot done"></span><span class="dot done"></span>
+        <span class="dot cur"></span><span class="dot"></span>
+        <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+      </div>
+    </div>
+
+    <p class="counter">Вопрос 3 из 7</p>
+
+    <div class="pills">
+      <span class="pill pill-stake">🎾 +20 за ответ</span>
+      <span class="pill pill-streak">🔥 Серия ×2</span>
+    </div>
+
+    <div class="q-card">
+      <p class="q-topic">Тактика и выбор удара</p>
+      <p class="q-text">Идёт спокойный ровный розыгрыш с задней линии, ничего особенного не происходит. Куда мне разумнее всего направлять мяч по умолчанию?</p>
+    </div>
+
+    <div class="options" id="opts">
+      <button class="opt" data-correct="1">
+        <span class="letter">А</span>
+        <span class="otext">По диагонали (кросс) — там сетка ниже и корт длиннее, мяч надёжнее</span>
+        <span class="mark">✅</span>
+      </button>
+      <button class="opt">
+        <span class="letter">Б</span>
+        <span class="otext">Каждый раз менять направление, чтобы запутать соперника</span>
+        <span class="mark">·</span>
+      </button>
+      <button class="opt">
+        <span class="letter">В</span>
+        <span class="otext">Только вдоль линии — так быстрее закончить очко</span>
+        <span class="mark">·</span>
+      </button>
+      <button class="opt">
+        <span class="letter">Г</span>
+        <span class="otext">Всегда точно в центр</span>
+        <span class="mark">·</span>
+      </button>
+    </div>
+
+    <div class="explain" id="explain">
+      <div class="ace">🎾</div>
+      <div>
+        <p class="reaction" id="reaction">В точку! 🎾</p>
+        <p class="ex-label">Эйс объясняет</p>
+        <p class="ex-text">Диагональ — самый надёжный мяч: над центром сетка ниже, а по диагонали корт длиннее, так что у мяча больше места приземлиться. Это база, с которой строится розыгрыш.</p>
+      </div>
+    </div>
+
+    <button class="cta" id="cta">Дальше →</button>
+  </div>
+
+  <div class="preview-tag">эталон · дизайн-система v1</div>
+
+<script>
+// Мини-логика только для превью: показать обратную связь в духе Duolingo
+var opts = document.getElementById('opts');
+var answered = false;
+opts.querySelectorAll('.opt').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    if(answered) return;
+    answered = true;
+    opts.classList.add('answered');
+    var correctBtn = opts.querySelector('[data-correct]');
+    correctBtn.classList.add('correct','pop');
+    correctBtn.querySelector('.mark').textContent = '✅';
+    if(!btn.dataset.correct){
+      btn.classList.add('notbest');
+      btn.querySelector('.mark').textContent = '🤔';
+      document.getElementById('reaction').textContent = 'Почти! Глянь, как лучше 🎾';
+    }
+    document.getElementById('explain').classList.add('show');
+    document.getElementById('cta').classList.add('show');
+    document.getElementById('cta').scrollIntoView({behavior:'smooth', block:'end'});
+  });
+});
+document.getElementById('cta').addEventListener('click', function(){
+  // в превью просто сбрасываем
+  location.reload();
+});
+</script>
+</body>
+</html>
