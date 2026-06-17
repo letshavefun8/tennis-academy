@@ -6,7 +6,7 @@
 
 // Версия сборки — меняется при каждом деплое, видна внизу экрана.
 // Помогает убедиться, что на боевой сайт долетела свежая версия.
-var APP_VERSION = 'сборка 10 · 17.06';
+var APP_VERSION = 'сборка 11 · 17.06';
 
 // Показываем версию внизу страницы
 (function showVersion() {
@@ -1032,6 +1032,25 @@ function showResults() {
     } else {
       elResultStarsRow.innerHTML =
         '<span class="stars-label">Звёзды блока:</span> ' + starsHtml(starsNow);
+    }
+  }
+
+  // Публикуем событие завершения урока (блока) — не чаще раза в день на блок,
+  // и только если заработаны очки (пустые переигровки не засоряют ленту).
+  if (session.mode === 'block' && session.blockId !== null && session.sessionPoints > 0) {
+    var acctL = loadAccount();
+    if (acctL) {
+      var lessonFeedKey = 'tennisAcademy.lastLessonFeed.' + session.blockId;
+      var todayLesson = todayStr();
+      if (localStorage.getItem(lessonFeedKey) !== todayLesson) {
+        localStorage.setItem(lessonFeedKey, todayLesson);
+        var lblL = BLOCK_DISPLAY[session.blockId] ? BLOCK_DISPLAY[session.blockId].label : 'блок ' + session.blockId;
+        cloudPostFeedEvent(
+          'lesson_done',
+          acctL.name + ' прошёл урок «' + lblL + '» +' + session.sessionPoints + ' 🎾',
+          '🎾'
+        );
+      }
     }
   }
 

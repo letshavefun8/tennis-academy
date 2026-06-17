@@ -30,7 +30,7 @@ T_PLAYERS = _dynamodb.Table("players")
 T_NAMES = _dynamodb.Table("names")
 T_FEED = _dynamodb.Table("feed")
 
-ALLOWED_FEED_TYPES = ("block_stars", "rank_up", "daily_done")
+ALLOWED_FEED_TYPES = ("block_stars", "rank_up", "daily_done", "lesson_done")
 TOKEN_TTL = 60 * 60 * 24 * 365  # год
 
 # =====================================================
