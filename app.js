@@ -6,7 +6,7 @@
 
 // Версия сборки — меняется при каждом деплое, видна внизу экрана.
 // Помогает убедиться, что на боевой сайт долетела свежая версия.
-var APP_VERSION = 'сборка 8 · 17.06';
+var APP_VERSION = 'сборка 9 · 17.06';
 
 // Показываем версию внизу страницы
 (function showVersion() {
@@ -1167,7 +1167,7 @@ function buildMenu() {
 
   // Есть аккаунт → кнопка «Выйти»; гость при настроенном облаке →
   // кнопка «Войти или зарегистрироваться» (без облака регистрация невозможна).
-  var cloudConfigured = (typeof FIREBASE_CONFIG !== 'undefined' && FIREBASE_CONFIG !== null);
+  var cloudConfigured = (typeof CLOUD_BACKEND_URL !== 'undefined' && CLOUD_BACKEND_URL);
   if (acct) {
     elBtnLogout.classList.remove('hidden');
     elBtnGuestLogin.classList.add('hidden');
@@ -1648,33 +1648,30 @@ var loginAttempts = 0;
 var loginLockTimer = null;
 
 /**
- * Возвращает мягкую реплику Эйса по коду ошибки Firebase Auth.
- * rawMsg — необязательное сырое сообщение; для неизвестных ошибок
- * показываем технический код/текст прямо на экране (диагностика на телефоне).
+ * Возвращает мягкую реплику Эйса по коду ошибки бэкенда.
+ * Коды сервера: name-taken | not-found | wrong-pin | bad-name | bad-pin |
+ *               unauth | network | no-cloud.
+ * rawMsg — сырое сообщение; для неизвестных ошибок показываем код (диагностика).
  */
 function mapAuthError(code, rawMsg) {
   switch (code) {
-    case 'auth/email-already-in-use':
+    case 'name-taken':
       return 'Ой, это имя уже занято! Попробуй другое или войди во вкладке «У меня есть аккаунт» 🎾';
-    case 'auth/user-not-found':
+    case 'not-found':
       return 'Не нашёл такого игрока. Проверь имя — или заведи новый аккаунт 🌟';
-    case 'auth/wrong-password':
+    case 'wrong-pin':
       return 'ПИН не подошёл. Попробуй ещё раз 🔑';
-    case 'auth/invalid-credential':
-      // Современные SDK объединяют user-not-found + wrong-password в один код
-      return 'Имя или ПИН не совпадают. Проверь и попробуй ещё раз 🎾';
-    case 'auth/invalid-email':
-      return 'Хм, с этим именем не получается. Попробуй буквами 🎾';
-    case 'auth/too-many-requests':
-      return 'Слишком много попыток! Давай передохнём минутку ⏳';
-    case 'auth/network-request-failed':
+    case 'bad-name':
+      return 'Имя должно быть от 1 до 20 символов 🎾';
+    case 'bad-pin':
+      return 'ПИН — ровно 4 цифры (0-9) 🔑';
+    case 'bad-input':
+      return 'Проверь имя и ПИН и попробуй ещё раз 🎾';
+    case 'network':
     case 'no-cloud':
-      // Временно показываем код — диагностика блокировок в РФ без VPN
-      var net = code || '';
-      if (rawMsg && rawMsg !== code) net += (net ? ' — ' : '') + rawMsg;
-      return 'Кажется, нет интернета. Проверь сеть и попробуй снова 📡' + (net ? ' [' + net + ']' : '');
-    case 'auth/operation-not-allowed':
-    case 'auth/weak-password':
+      return 'Кажется, нет интернета. Проверь сеть и попробуй снова 📡';
+    case 'unauth':
+      return 'Нужно войти заново 🎾';
     default:
       // Неизвестная ошибка — показываем технический код/текст для диагностики
       var detail = code || '';
@@ -2052,65 +2049,32 @@ if (elBtnGuestLogin) {
 checkRetroBadges();
 
 /**
- * Запускает приложение после инициализации Firebase и резолва onAuthStateChanged.
- * cloudOk — boolean: true если Firebase сконфигурирован.
- * user — объект пользователя Firebase или null.
+ * Запускает приложение после инициализации облачного слоя.
+ * cloudOk — boolean: true если бэкенд настроен.
+ * user — сохранённый аккаунт {uid,name,token} или null.
  */
 function startApp(cloudOk, user) {
-  var hasConfig = (typeof FIREBASE_CONFIG !== 'undefined' && FIREBASE_CONFIG !== null);
-  var acct      = loadAccount();
+  // user = сохранённый аккаунт {uid,name,token} или null (см. cloudWaitForAuth)
+  var acct = user || loadAccount();
 
-  if (hasConfig && cloudOk) {
-    // Firebase настроен и SDK загружен
-    if (user) {
-      // Есть активная Firebase-сессия
-      if (!acct) {
-        // Аккаунт не сохранён локально — восстанавливаем из облака
-        cloudLoadPlayer(user.uid).then(function(cloudData) {
-          if (cloudData && cloudData.name) {
-            saveAccount(user.uid, cloudData.name);
-          }
-          buildMenu();
-          showScreen('menu');
-        });
-        return;
-      }
-      // Аккаунт есть — прямо в меню (или онбординг при первом входе)
-      if (!profile.onboarded) {
-        buildOnboarding();
-        showScreen('onboarding');
-      } else {
-        buildMenu();
-        showScreen('menu');
-      }
-    } else {
-      // Нет активной Firebase-сессии
-      if (acct) {
-        // Аккаунт есть локально (гость с прогрессом, сессия устарела) — в меню
-        buildMenu();
-        showScreen('menu');
-      } else if (!profile.onboarded) {
-        // Новый пользователь без онбординга — показываем регистрацию
-        showAuthScreen('register');
-      } else {
-        // Уже прошёл онбординг гостем — в меню без аккаунта
-        buildMenu();
-        showScreen('menu');
-      }
-    }
+  if (cloudOk && !acct && !profile.onboarded) {
+    // Бэкенд доступен, нет аккаунта, новый игрок — показываем регистрацию/вход
+    showAuthScreen('register');
+    return;
+  }
+
+  // Во всех остальных случаях: онбординг (если не пройден) или меню.
+  // Гость без аккаунта тоже играет локально; аккаунт подхватится в меню.
+  if (!profile.onboarded) {
+    buildOnboarding();
+    showScreen('onboarding');
   } else {
-    // Firebase не настроен или SDK не загружен — локальный режим
-    if (!profile.onboarded) {
-      buildOnboarding();
-      showScreen('onboarding');
-    } else {
-      buildMenu();
-      showScreen('menu');
-    }
+    buildMenu();
+    showScreen('menu');
   }
 }
 
-// Инициализируем Firebase, ждём первого onAuthStateChanged, затем запускаем приложение.
+// Инициализируем облачный слой, проверяем сохранённый аккаунт, затем запускаем.
 // Ни один экран не показывается до резолва cloudWaitForAuth (все .screen hidden по умолчанию).
 cloudInit().then(function(cloudOk) {
   if (!cloudOk) {

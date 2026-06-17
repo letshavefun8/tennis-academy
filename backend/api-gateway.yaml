@@ -1,0 +1,21 @@
+openapi: 3.0.0
+info:
+  title: tennis-api
+  version: 1.0.0
+# Все пути и методы направляются в одну Cloud Function.
+# Функция сама маршрутизирует по пути (/register, /login, /sync, /feed, /leaderboard, /player)
+# и отдаёт CORS-заголовки (включая ответ на OPTIONS-предзапрос).
+paths:
+  /{path+}:
+    x-yc-apigateway-any-method:
+      summary: Проксирование всех запросов в функцию академии
+      parameters:
+        - name: path
+          in: path
+          required: true
+          schema:
+            type: string
+      x-yc-apigateway-integration:
+        type: cloud_functions
+        function_id: d4elmtppl6selohckc6f
+        service_account_id: ajemrlkcqardi59ug72a

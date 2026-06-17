@@ -272,20 +272,12 @@
   <!-- Версия сборки (видна внизу для проверки деплоя) -->
   <div id="app-version" class="app-version"></div>
 
-  <!-- ===== СКРИПТЫ: данные и Firebase — ДО app.js ===== -->
-  <!-- Firebase compat SDK (версия 10.x) -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-check-compat.js"></script>
-
-  <!-- Конфигурация Firebase (null = заглушка) -->
-  <script src="firebase-config.js?v=8"></script>
-  <!-- Сетевой слой -->
-  <script src="cloud.js?v=8"></script>
+  <!-- ===== СКРИПТЫ: данные и облако — ДО app.js ===== -->
+  <!-- Сетевой слой (Yandex Cloud backend, доступен в РФ) -->
+  <script src="cloud.js?v=9"></script>
   <!-- Данные вопросов -->
-  <script src="questions.js?v=8"></script>
+  <script src="questions.js?v=9"></script>
   <!-- Логика приложения -->
-  <script src="app.js?v=8"></script>
+  <script src="app.js?v=9"></script>
 </body>
 </html>
