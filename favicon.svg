@@ -1,11 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Академия тенниса — теннисный мяч">
-  <!-- Фон: корт-грин, скруглённый квадрат — чтобы иконка читалась на любой вкладке -->
-  <rect width="64" height="64" rx="15" fill="#1F6F50"/>
-  <!-- Мяч: лайм -->
-  <circle cx="32" cy="32" r="20" fill="#C7E03A"/>
-  <!-- Швы мяча: две белые дуги, целиком внутри круга (мяч r=20, центр 32,32) -->
-  <g fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round">
-    <path d="M21,18 Q33,32 21,46"/>
-    <path d="M43,18 Q31,32 43,46"/>
+  <!-- Только мяч, без фона (прозрачный). Мяч: лайм, r=30, центр 32,32 -->
+  <circle cx="32" cy="32" r="30" fill="#C7E03A"/>
+  <!-- Швы мяча: две белые дуги, целиком внутри круга -->
+  <g fill="none" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round">
+    <path d="M16,12 Q33,32 16,52"/>
+    <path d="M48,12 Q31,32 48,52"/>
   </g>
 </svg>
