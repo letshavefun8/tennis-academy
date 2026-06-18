@@ -382,22 +382,6 @@ h1 {
   box-shadow: var(--sh-card), 0 0 0 2px var(--warm);
 }
 
-/* Состояние: текущий (первый незапущенный блок) */
-.level-node.is-current {
-  border-color: var(--warm);
-  box-shadow: var(--sh-card), 0 0 0 3px rgba(242,160,61,.3);
-  background: #FFF8EE;
-}
-
-.level-node.is-current .level-node-icon {
-  background: #FFF1DF;
-}
-
-.level-node.is-current .level-node-name {
-  color: var(--brand-ink);
-  font-weight: 700;
-}
-
 /* Состояние: впереди (недоступен визуально, но кликабелен) */
 .level-node.is-todo {
   opacity: 0.7;
