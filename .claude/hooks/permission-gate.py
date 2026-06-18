@@ -43,7 +43,7 @@ def sanitize(cmd):
     """Убираем ДАННЫЕ (тело heredoc, содержимое кавычек), чтобы анализировать только
     реальные команды. Иначе опасные строки внутри echo/heredoc/аргументов ложно
     срабатывают (напр. python3 <<'PY' ... rm -rf / ... PY, или echo \"rm -rf /\")."""
-    cmd = re.split(r'<<-?\s*[\'"]?\w+', cmd, 1)[0]   # всё после <<MARKER — это данные
+    cmd = re.split(r'<<-?\s*[\'"]?\w+', cmd, maxsplit=1)[0]   # всё после <<MARKER — это данные
     cmd = re.sub(r'"[^"]*"', '""', cmd)               # содержимое двойных кавычек
     cmd = re.sub(r"'[^']*'", "''", cmd)               # содержимое одинарных кавычек
     return cmd
@@ -113,9 +113,28 @@ def segment_is_safe(seg):
     if cmd == "node":
         return "--check" in rest or "-v" in rest or "--version" in rest
     if cmd in ("python3", "python"):
-        return rest[:1] == ["convert.py"]
+        # генератор вопросов
+        if rest[:1] == ["convert.py"]:
+            return True
+        # тест-харнес проекта: python3 tests/<...>.py
+        if rest[:1] and rest[0].startswith("tests/") and rest[0].endswith(".py"):
+            return True
+        # локальный статик-сервер для браузерных тестов
+        if rest[:2] == ["-m", "http.server"]:
+            return True
+        return False
     if cmd == "curl":
-        return any("localhost" in t or "127.0.0.1" in t for t in rest)
+        # разрешаем только read-only HTTP GET: без отправки данных и без смены
+        # метода на мутирующий (POST/PUT/DELETE/PATCH). GET к любому хосту ок.
+        if any(t.startswith("--data") or t in ("-d","-F","--form","-T","--upload-file","--upload")
+               for t in rest):
+            return False
+        for i, t in enumerate(rest):
+            if t in ("-X", "--request"):
+                method = rest[i+1].upper() if i + 1 < len(rest) else ""
+                if method and method != "GET":
+                    return False
+        return True
     return False
 
 # ---------- разрушительные команды (по ведущей команде сегмента) ----------
