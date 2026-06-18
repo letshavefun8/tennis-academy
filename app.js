@@ -6,7 +6,7 @@
 
 // Версия сборки — меняется при каждом деплое, видна внизу экрана.
 // Помогает убедиться, что на боевой сайт долетела свежая версия.
-var APP_VERSION = 'сборка 23 · 18.06';
+var APP_VERSION = 'сборка 24 · 18.06';
 
 // Показываем версию внизу страницы
 (function showVersion() {
@@ -1521,7 +1521,7 @@ function renderHall(playerData) {
 
 /**
  * Строит карточки блоков для одной секции в виде сетки узлов-кружков.
- * Состояния: is-done (пройден), is-current (первый с 0 звёзд), is-todo (остальные).
+ * Состояния: is-done (пройден, выделяется), is-todo (ещё не пройден).
  */
 function buildSectionCards(sectionName, container) {
   container.innerHTML = '';
@@ -1534,15 +1534,6 @@ function buildSectionCards(sectionName, container) {
     sectionBlocks.push(blockId);
   }
 
-  // Определяем первый блок с 0 звёзд — он «текущий»
-  var currentBid = -1;
-  for (var si = 0; si < sectionBlocks.length; si++) {
-    if (getBlockStars(sectionBlocks[si]) === 0) {
-      currentBid = sectionBlocks[si];
-      break;
-    }
-  }
-
   for (var si2 = 0; si2 < sectionBlocks.length; si2++) {
     // Замыкание для bid
     (function(bid) {
@@ -1552,15 +1543,8 @@ function buildSectionCards(sectionName, container) {
 
       var stars = getBlockStars(bid);
 
-      // Определяем состояние узла
-      var stateClass = '';
-      if (stars >= 1) {
-        stateClass = 'is-done';
-      } else if (bid === currentBid) {
-        stateClass = 'is-current';
-      } else {
-        stateClass = 'is-todo';
-      }
+      // Состояние узла: выделяем только пройденные блоки (≥1 звезды)
+      var stateClass = (stars >= 1) ? 'is-done' : 'is-todo';
       // Дополнительный класс для 3 звёзд
       if (stars === 3) stateClass += ' is-perfect';
 
