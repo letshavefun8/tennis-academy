@@ -1,0 +1,135 @@
+<!-- @dsCard group="Экран вопроса (A/B)" name="Вариант B — Матч с Эйсом" subtitle="Эмоция через соперника-маскота · табло счёта" width="430" height="900" -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Вариант B «Матч с Эйсом» — Академия тенниса</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FBF7EF; --surface:#FFFFFF; --surface-soft:#F4EFE4;
+  --brand:#1F6F50; --brand-ink:#134B36;
+  --accent:#C7E03A; --accent-ink:#2C3A00; --accent-deep:#A8C72A;
+  --warm:#F2A03D;
+  --success:#2E9E5B; --success-bg:#E9F7EE;
+  --gentle:#6B7A86; --gentle-bg:#F0F2F4;
+  --text:#1C2B23; --muted:#5E6B63;
+  --border:#E7E1D4; --border-strong:#D4CCBA;
+  --r-card:16px; --r-btn:14px; --r-pill:999px;
+  --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:20px; --s6:24px;
+  --sh-card:0 1px 2px rgba(28,43,35,.04),0 4px 12px rgba(28,43,35,.06);
+  --font-display:'Unbounded',system-ui,sans-serif;
+  --font-body:'Nunito',system-ui,sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-body); background:linear-gradient(170deg,#FBF7EF 0%,#FaF5E9 60%,#FBF6EC 100%); color:var(--text); min-height:100vh; -webkit-font-smoothing:antialiased}
+.screen{max-width:480px; margin:0 auto; padding:var(--s4) var(--s4) 40px; min-height:100vh}
+
+.back-row{display:flex; margin-bottom:var(--s2)}
+.btn-back{font-size:1.3rem; color:var(--muted); background:none; border:none; cursor:pointer; min-width:44px; min-height:40px; line-height:1}
+
+/* табло матча ты vs Эйс */
+.score{background:var(--surface); border:1px solid var(--border); border-radius:var(--r-card); padding:var(--s3) var(--s4); box-shadow:var(--sh-card); margin-bottom:var(--s3)}
+.score-row{display:flex; align-items:center; justify-content:space-between; gap:var(--s2)}
+.side{font-family:var(--font-display); font-weight:700; font-size:.8rem}
+.side.you{color:var(--brand)}
+.side.ace{color:var(--muted)}
+.cells{display:flex; gap:5px; flex:1; justify-content:center}
+.cell{width:13px; height:13px; border-radius:4px; background:#E3DCCD}
+.cell.you{background:var(--accent); border:1px solid var(--accent-deep)}
+.cell.ace{background:var(--warm); opacity:.6}
+.cell.cur{box-shadow:0 0 0 3px rgba(242,160,61,.25)}
+.streak{margin-bottom:var(--s5); text-align:center; font-family:var(--font-display); font-weight:700; font-size:.8rem; color:#9A5B12; background:#FFF1DF; border:1px solid var(--warm); border-radius:var(--r-pill); padding:6px 14px; display:inline-block}
+.streak-wrap{text-align:center; margin-bottom:var(--s5)}
+
+/* реплика Эйса: маскот + пузырь */
+.ace-row{display:flex; align-items:flex-start; gap:var(--s3); margin-bottom:var(--s6)}
+.ace-mascot{font-size:3rem; line-height:1; flex:0 0 auto; margin-top:6px}
+.bubble{position:relative; flex:1; background:var(--surface); border:1.5px solid var(--warm); border-radius:var(--r-card); padding:var(--s4)}
+.bubble::before{content:""; position:absolute; left:-9px; top:18px; width:16px; height:16px; background:var(--surface); border-left:1.5px solid var(--warm); border-bottom:1.5px solid var(--warm); transform:rotate(45deg)}
+.q-topic{font-size:.72rem; font-weight:800; letter-spacing:.04em; text-transform:uppercase; color:var(--brand); margin-bottom:var(--s2)}
+.q-text{font-size:1.125rem; line-height:1.55; font-weight:600}
+.bubble .reaction{display:none; font-family:var(--font-display); font-weight:700; color:var(--brand); font-size:1.1rem}
+.bubble.answered .reaction{display:block; margin-bottom:6px}
+
+.options{display:flex; flex-direction:column; gap:var(--s3); margin-bottom:var(--s5)}
+.opt{display:flex; align-items:center; gap:var(--s3); text-align:left; width:100%; background:var(--surface); border:1.5px solid var(--border); border-radius:var(--r-card); padding:var(--s4); min-height:64px; cursor:pointer; font-family:var(--font-body); font-size:1.0625rem; font-weight:600; color:var(--text); box-shadow:var(--sh-card); transition:border-color .15s, background .15s, transform .08s}
+.opt:hover{border-color:var(--border-strong)}
+.opt:active{transform:scale(.99)}
+.opt .letter{flex:0 0 auto; width:34px; height:34px; border-radius:50%; display:grid; place-items:center; font-family:var(--font-display); font-weight:700; font-size:.95rem; background:var(--surface-soft); color:var(--brand-ink)}
+.opt .otext{flex:1}
+.opt .mark{flex:0 0 auto; font-size:1.2rem; opacity:0; transition:opacity .2s}
+.opt.correct{border-color:var(--success); background:var(--success-bg)}
+.opt.correct .letter{background:var(--success); color:#fff}
+.opt.correct .mark{opacity:1}
+.opt.notbest{border-color:var(--gentle); background:var(--gentle-bg)}
+.opt.notbest .letter{background:var(--gentle); color:#fff}
+.opt.notbest .mark{opacity:1}
+.options.answered .opt{cursor:default}
+.options.answered .opt:not(.correct):not(.notbest){opacity:.55}
+@keyframes bounce{0%,100%{transform:translateY(0)}30%{transform:translateY(-10px)}60%{transform:translateY(-3px)}}
+.ace-mascot.bounce{animation:bounce .6s ease}
+
+.explain{display:none; background:var(--surface); border:1px solid var(--border); border-left:4px solid var(--brand); border-radius:var(--r-card); padding:var(--s4); box-shadow:var(--sh-card); margin-bottom:var(--s5)}
+.explain.show{display:block; animation:rise .3s ease-out}
+@keyframes rise{from{opacity:0; transform:translateY(8px)}to{opacity:1; transform:none}}
+.explain .ex-label{font-size:.72rem; font-weight:800; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); margin-bottom:4px}
+.explain .ex-text{font-size:1rem; line-height:1.5}
+.cta{display:none; width:100%; font-family:var(--font-display); font-weight:700; font-size:1.1rem; color:var(--accent-ink); background:var(--accent); border:none; border-radius:var(--r-btn); padding:16px; min-height:56px; cursor:pointer; box-shadow:0 6px 16px rgba(168,199,42,.35); transition:transform .08s, background .15s}
+.cta.show{display:block; animation:rise .3s ease-out}
+.cta:hover{background:var(--accent-deep)}
+.cta:active{transform:translateY(1px) scale(.99)}
+.tag{position:fixed; bottom:6px; right:10px; font-size:.7rem; color:#B9A06A; opacity:.7}
+</style>
+</head>
+<body>
+  <div class="screen">
+    <div class="back-row"><button class="btn-back" title="Выйти">←</button></div>
+
+    <div class="score">
+      <div class="score-row">
+        <span class="side you">🎾 ТЫ</span>
+        <div class="cells">
+          <span class="cell you"></span><span class="cell you"></span>
+          <span class="cell cur"></span><span class="cell"></span>
+          <span class="cell"></span><span class="cell"></span><span class="cell"></span>
+        </div>
+        <span class="side ace">ЭЙС</span>
+      </div>
+    </div>
+    <div class="streak-wrap"><span class="streak">🔥 ТЫ ВЕДЁШЬ ×2</span></div>
+
+    <div class="ace-row">
+      <div class="ace-mascot" id="mascot">🎾</div>
+      <div class="bubble" id="bubble">
+        <p class="reaction" id="reaction"></p>
+        <p class="q-topic">Розыгрыш стоит 🎾 20</p>
+        <p class="q-text">Идёт спокойный ровный розыгрыш с задней линии. Куда разумнее всего направлять мяч по умолчанию?</p>
+      </div>
+    </div>
+
+    <div class="options" id="opts">
+      <button class="opt" data-correct="1"><span class="letter">А</span><span class="otext">По диагонали (кросс) — сетка ниже, корт длиннее, мяч надёжнее</span><span class="mark">✅</span></button>
+      <button class="opt"><span class="letter">Б</span><span class="otext">Каждый раз менять направление, чтобы запутать соперника</span><span class="mark">·</span></button>
+      <button class="opt"><span class="letter">В</span><span class="otext">Только вдоль линии — так быстрее закончить очко</span><span class="mark">·</span></button>
+      <button class="opt"><span class="letter">Г</span><span class="otext">Всегда точно в центр</span><span class="mark">·</span></button>
+    </div>
+
+    <div class="explain" id="explain">
+      <p class="ex-label">Эйс объясняет</p>
+      <p class="ex-text">Диагональ — самый надёжный мяч: над центром сетка ниже, а по диагонали корт длиннее. У мяча больше места приземлиться.</p>
+    </div>
+
+    <button class="cta" id="cta">Следующий розыгрыш →</button>
+  </div>
+  <div class="tag">B · матч с Эйсом</div>
+<script>
+var opts=document.getElementById('opts'),answered=false;
+opts.querySelectorAll('.opt').forEach(function(b){b.addEventListener('click',function(){if(answered)return;answered=true;opts.classList.add('answered');var c=opts.querySelector('[data-correct]');c.classList.add('correct');document.getElementById('bubble').classList.add('answered');var rc=document.getElementById('reaction');if(b.dataset.correct){rc.textContent='Эйс! 🎯 Очко твоё';document.getElementById('mascot').classList.add('bounce');}else{b.classList.add('notbest');b.querySelector('.mark').textContent='🤔';rc.textContent='В сетку! Глянь, как надёжнее 🎾';}document.getElementById('explain').classList.add('show');document.getElementById('cta').classList.add('show');});});
+document.getElementById('cta').addEventListener('click',function(){location.reload();});
+</script>
+</body>
+</html>

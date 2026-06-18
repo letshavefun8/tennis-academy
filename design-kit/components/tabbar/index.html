@@ -1,0 +1,101 @@
+<!-- @dsCard group="Navigation" name="Нижний таб-бар" subtitle="4 вкладки · активное/неактивное состояние" width="430" height="320" -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Нижний таб-бар — Академия тенниса</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   Дизайн-система «Академии тенниса» — токены (утверждено)
+   ============================================================ */
+:root{
+  --bg:#FBF7EF; --surface:#FFFFFF; --surface-soft:#F4EFE4;
+  --brand:#1F6F50; --brand-ink:#134B36;
+  --accent:#C7E03A; --accent-ink:#2C3A00; --accent-deep:#A8C72A;
+  --warm:#F2A03D;
+  --text:#1C2B23; --muted:#5E6B63;
+  --border:#E7E1D4; --border-strong:#D4CCBA;
+  --font-display:'Unbounded',system-ui,sans-serif;
+  --font-body:'Nunito',system-ui,sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:var(--font-body); color:var(--text);
+  background:linear-gradient(170deg,#FBF7EF 0%,#FaF5E9 60%,#FBF6EC 100%);
+  min-height:100vh; padding:24px 16px;
+  -webkit-font-smoothing:antialiased;
+}
+
+.spec{max-width:430px; margin:0 auto}
+.spec-title{font-family:var(--font-display); font-weight:700; font-size:1.05rem; color:var(--brand-ink); margin-bottom:4px}
+.spec-note{font-size:.82rem; color:var(--muted); margin-bottom:20px}
+
+/* Демонстрационная «рамка телефона», чтобы таб-бар читался как нижний */
+.frame{
+  position:relative; height:200px; border-radius:20px; overflow:hidden;
+  background:var(--surface-soft); border:1px solid var(--border);
+}
+.frame .placeholder{
+  display:grid; place-items:center; height:100%; color:var(--muted);
+  font-size:.85rem; font-weight:700;
+}
+
+/* ---------- НИЖНИЙ ТАБ-БАР (как в приложении) ---------- */
+.tabbar{
+  position:absolute; left:0; right:0; bottom:0; z-index:10;
+  display:flex; justify-content:space-around;
+  background:var(--surface); border-top:1px solid var(--border);
+  box-shadow:0 -2px 12px rgba(28,43,35,.06);
+  padding:6px 4px;
+}
+.tabbar-btn{
+  flex:1; display:flex; flex-direction:column; align-items:center; gap:2px;
+  background:none; border:none; cursor:pointer; padding:8px 4px; min-height:56px;
+  color:var(--muted); font-family:var(--font-body); font-weight:700; font-size:.72rem;
+}
+.tabbar-ico{font-size:1.4rem; line-height:1}
+.tabbar-btn.active{color:var(--brand)}
+
+.variants{display:flex; flex-direction:column; gap:16px; margin-top:8px}
+.variant-lbl{font-size:.72rem; font-weight:800; letter-spacing:.05em; text-transform:uppercase; color:var(--muted); margin-bottom:6px}
+</style>
+</head>
+<body>
+  <div class="spec">
+    <p class="spec-title">Нижний таб-бар</p>
+    <p class="spec-note">Закреплён внизу экрана · 4 вкладки · активная подсвечивается корт-грином</p>
+
+    <div class="variants">
+      <div>
+        <p class="variant-lbl">Активна вкладка «Играть»</p>
+        <div class="frame">
+          <div class="placeholder">контент экрана</div>
+          <nav class="tabbar">
+            <button class="tabbar-btn active"><span class="tabbar-ico">🎾</span><span class="tabbar-lbl">Играть</span></button>
+            <button class="tabbar-btn"><span class="tabbar-ico">🏆</span><span class="tabbar-lbl">Профиль</span></button>
+            <button class="tabbar-btn"><span class="tabbar-ico">📣</span><span class="tabbar-lbl">Стена</span></button>
+            <button class="tabbar-btn"><span class="tabbar-ico">⚙️</span><span class="tabbar-lbl">Ещё</span></button>
+          </nav>
+        </div>
+      </div>
+
+      <div>
+        <p class="variant-lbl">Активна вкладка «Профиль»</p>
+        <div class="frame">
+          <div class="placeholder">контент экрана</div>
+          <nav class="tabbar">
+            <button class="tabbar-btn"><span class="tabbar-ico">🎾</span><span class="tabbar-lbl">Играть</span></button>
+            <button class="tabbar-btn active"><span class="tabbar-ico">🏆</span><span class="tabbar-lbl">Профиль</span></button>
+            <button class="tabbar-btn"><span class="tabbar-ico">📣</span><span class="tabbar-lbl">Стена</span></button>
+            <button class="tabbar-btn"><span class="tabbar-ico">⚙️</span><span class="tabbar-lbl">Ещё</span></button>
+          </nav>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
