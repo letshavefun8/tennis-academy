@@ -5,9 +5,9 @@ description: Деплой фронтенда «Академии тенниса»
 
 Процедура выката фронтенда на GitHub Pages. Делай строго по шагам.
 
-1. Текущий номер: `grep -n "?v=" index.html` (все 4 ссылки с одним N) и `APP_VERSION` в app.js (~строка 9). Новый номер = N+1.
+1. Текущий номер: `grep -n "?v=" index.html` (все 5 ссылок с одним N) и `APP_VERSION` в app.js (~строка 9). Новый номер = N+1.
 2. Забампь синхронно:
-   - index.html: `?v=N` → `?v=N+1` у style.css, cloud.js, questions.js, app.js (4 ссылки);
+   - index.html: `?v=N` → `?v=N+1` у style.css, cloud.js, questions.js, app.js, favicon.svg (5 ссылок);
    - app.js: `APP_VERSION = 'сборка N+1 · ДД.ММ'` (дата — сегодня).
 3. Если правил app.js — `node --check app.js`.
 4. Покажи `git diff` — убедись, что изменения только версионные.
