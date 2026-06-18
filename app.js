@@ -1683,24 +1683,42 @@ function showOnboardingResults() {
 // СТЕНА АКАДЕМИИ
 // =====================================================
 
-// Отписка от onSnapshot (чтобы не множить слушателей)
+// Отписка от опроса Стены (чтобы не множить слушателей)
 var feedUnsubscribe = null;
+var WALL_CACHE_KEY = 'tennisAcademy.wallCache';
 
-/** Открывает экран «Стена академии», загружает рейтинг и ленту */
+/** Читает кеш Стены { events, players } или null. */
+function loadWallCache() {
+  try { var r = localStorage.getItem(WALL_CACHE_KEY); return r ? JSON.parse(r) : null; }
+  catch (e) { return null; }
+}
+
+/** Сохраняет кеш Стены для мгновенного показа при следующем открытии. */
+function saveWallCache(data) {
+  try {
+    localStorage.setItem(WALL_CACHE_KEY, JSON.stringify({
+      events: (data && data.events) || [],
+      players: (data && data.players) || []
+    }));
+  } catch (e) {}
+}
+
+/** Открывает экран «Стена академии»: мгновенно из кеша, затем обновление в фоне. */
 function openWall() {
   showScreen('wall');
 
-  // Рейтинг
   var lbWrap = document.getElementById('leaderboard-wrap');
-  lbWrap.innerHTML = '<p class="wall-loading">Загружаем рейтинг...</p>';
-
-  cloudLoadLeaderboard().then(function(players) {
-    renderLeaderboard(lbWrap, players);
-  });
-
-  // Лента (real-time)
   var feedWrap = document.getElementById('feed-wrap');
-  feedWrap.innerHTML = '<p class="wall-loading">Загружаем события...</p>';
+
+  // Мгновенный показ из кеша (если есть) — без ожидания сети/холодного старта
+  var cached = loadWallCache();
+  if (cached) {
+    renderLeaderboard(lbWrap, cached.players);
+    renderFeed(feedWrap, cached.events);
+  } else {
+    lbWrap.innerHTML = '<p class="wall-loading">Загружаем рейтинг...</p>';
+    feedWrap.innerHTML = '<p class="wall-loading">Загружаем события...</p>';
+  }
 
   // Отписываемся от предыдущей подписки
   if (feedUnsubscribe) {
@@ -1708,8 +1726,17 @@ function openWall() {
     feedUnsubscribe = null;
   }
 
-  feedUnsubscribe = cloudLoadFeed(function(events) {
-    renderFeed(feedWrap, events);
+  // Обновление в фоне: один запрос на лента+рейтинг (/wall), далее опрос
+  feedUnsubscribe = cloudSubscribeWall(function(data) {
+    if (!data) {
+      // нет авторитетных данных (нет сети/нет бэкенда) — кеш не затираем;
+      // если кеша и не было, показываем пустое состояние вместо вечного спиннера
+      if (!cached) { renderLeaderboard(lbWrap, []); renderFeed(feedWrap, []); }
+      return;
+    }
+    renderLeaderboard(lbWrap, data.players);
+    renderFeed(feedWrap, data.events);
+    saveWallCache(data);
   });
 }
 
@@ -1766,7 +1793,7 @@ function renderFeed(container, events) {
   var html = '';
   for (var i = 0; i < events.length; i++) {
     var ev = events[i];
-    // ts может быть Firestore Timestamp или число (из офлайн-очереди)
+    // ts — число (мс). Защитная поддержка legacy-объекта {seconds} на всякий случай.
     var tsNum = ev.ts && typeof ev.ts === 'object' && ev.ts.seconds
       ? ev.ts.seconds * 1000
       : (typeof ev.ts === 'number' ? ev.ts : 0);

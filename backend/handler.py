@@ -247,27 +247,34 @@ def post_feed(body):
     return _resp(200, {"ok": True})
 
 
-def get_feed():
+def _feed_events():
     r = T_FEED.query(
         KeyConditionExpression=Key("bucket").eq("all"),
         ScanIndexForward=False,
         Limit=30,
     )
-    events = [{
+    return [{
         "uid": it.get("uid"), "name": it.get("name"), "type": it.get("type"),
         "text": it.get("text"), "emoji": it.get("emoji"), "ts": _num(it.get("ts")),
     } for it in r.get("Items", [])]
-    return _resp(200, {"ok": True, "events": events})
 
 
-def leaderboard():
+def _leaderboard_players():
     wk_now = week_key()
-    r = T_PLAYERS.scan(
-        ProjectionExpression="uid, #n, weekly_points, week_key, rank_name, points",
-        ExpressionAttributeNames={"#n": "name"},
-    )
+    scan_kwargs = {
+        "ProjectionExpression": "uid, #n, weekly_points, week_key, rank_name, points",
+        "ExpressionAttributeNames": {"#n": "name"},
+    }
+    items = []
+    while True:  # пагинация: scan отдаёт максимум ~1 МБ за вызов
+        r = T_PLAYERS.scan(**scan_kwargs)
+        items.extend(r.get("Items", []))
+        lek = r.get("LastEvaluatedKey")
+        if not lek:
+            break
+        scan_kwargs["ExclusiveStartKey"] = lek
     players = []
-    for it in r.get("Items", []):
+    for it in items:
         wp = _num(it.get("weekly_points")) if it.get("week_key") == wk_now else 0
         players.append({
             "uid": it.get("uid"), "name": it.get("name"),
@@ -275,7 +282,20 @@ def leaderboard():
             "points": _num(it.get("points")),
         })
     players.sort(key=lambda x: x["weeklyPoints"], reverse=True)
-    return _resp(200, {"ok": True, "players": players[:20]})
+    return players[:20]
+
+
+def get_feed():
+    return _resp(200, {"ok": True, "events": _feed_events()})
+
+
+def leaderboard():
+    return _resp(200, {"ok": True, "players": _leaderboard_players()})
+
+
+def wall():
+    # Стена одним запросом: лента + рейтинг. Меньше round-trip'ов и холодных стартов.
+    return _resp(200, {"ok": True, "events": _feed_events(), "players": _leaderboard_players()})
 
 
 def get_player(params):
@@ -354,6 +374,8 @@ def handler(event, context):
             return get_feed()
         if route == "leaderboard":
             return leaderboard()
+        if route == "wall":
+            return wall()
         if route == "player":
             return get_player(params)
         return _resp(404, {"ok": False, "error": "not found", "route": route})

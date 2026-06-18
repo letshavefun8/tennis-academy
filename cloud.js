@@ -169,7 +169,10 @@ window.addEventListener('online', function () { if (cloudReady) flushSyncQueue()
  */
 function cloudInit() {
   cloudReady = !!CLOUD_BACKEND_URL;
-  if (cloudReady) flushSyncQueue();
+  if (cloudReady) {
+    flushSyncQueue();
+    apiGet('/feed'); // прогрев serverless-функции, чтобы Стена потом открывалась без холодного старта
+  }
   return Promise.resolve(cloudReady);
 }
 
@@ -264,20 +267,41 @@ function cloudPostFeedEvent(type, text, emoji) {
 }
 
 /**
- * Подписка на ленту через опрос. cb(events) вызывается сразу и далее раз в FEED_POLL_MS.
- * Возвращает функцию отписки.
+ * Загружает Стену (лента + рейтинг) ОДНИМ запросом /wall.
+ * Если /wall недоступен (старый бэкенд) — откатывается к двум запросам.
+ * Возвращает Promise<{events, players}> или Promise<null> при полном отказе сети.
  */
-function cloudLoadFeed(cb) {
+function cloudLoadWall() {
+  if (!cloudReady) return Promise.resolve({ events: [], players: [] });
+  return apiGet('/wall').then(function (data) {
+    if (data && data.ok && ('events' in data || 'players' in data)) {
+      return { events: data.events || [], players: data.players || [] };
+    }
+    // Фолбэк: /wall ещё не задеплоен — старые два запроса
+    return Promise.all([apiGet('/feed'), apiGet('/leaderboard')]).then(function (res) {
+      if (!res[0] && !res[1]) return null; // полный отказ сети — не затираем кеш
+      return {
+        events: (res[0] && res[0].events) ? res[0].events : [],
+        players: (res[1] && res[1].players) ? res[1].players : []
+      };
+    });
+  });
+}
+
+/**
+ * Подписка на Стену через опрос. cb({events, players}) сразу и далее раз в FEED_POLL_MS.
+ * cb(null) — при полном сетевом отказе (вызывающий код может оставить прежнее). Возвращает отписку.
+ */
+function cloudSubscribeWall(cb) {
   if (!cloudReady) {
-    if (typeof cb === 'function') cb([]);
+    if (typeof cb === 'function') cb(null); // нет бэкенда — не затираем кеш Стены
     return function () {};
   }
   var stopped = false;
   function tick() {
-    apiGet('/feed').then(function (data) {
+    cloudLoadWall().then(function (data) {
       if (stopped) return;
-      var events = (data && data.events) ? data.events : [];
-      if (typeof cb === 'function') cb(events);
+      if (typeof cb === 'function') cb(data);
     });
   }
   tick();
@@ -288,14 +312,6 @@ function cloudLoadFeed(cb) {
 // =====================================================
 // РЕЙТИНГ / ЧУЖОЙ ПРОФИЛЬ
 // =====================================================
-
-/** Топ игроков недели. Возвращает Promise<Array>. */
-function cloudLoadLeaderboard() {
-  if (!cloudReady) return Promise.resolve([]);
-  return apiGet('/leaderboard').then(function (data) {
-    return (data && data.players) ? data.players : [];
-  });
-}
 
 /** Профиль игрока по uid. Возвращает Promise<player|null>. */
 function cloudLoadPlayer(uid) {
