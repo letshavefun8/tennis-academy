@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>tennis tests — загрузка...</title>
+  <style>
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: #f0f7f4;
+      max-width: 720px;
+      margin: 40px auto;
+      padding: 24px;
+      color: #1a1a1a;
+    }
+    h1 {
+      font-size: 22px;
+      color: #1F6F50;
+      margin-bottom: 4px;
+    }
+    .subtitle {
+      color: #666;
+      font-size: 13px;
+      margin-bottom: 24px;
+    }
+    #test-results {
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px 24px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    #error-box {
+      display: none;
+      background: #fff0f0;
+      border: 2px solid #e74c3c;
+      border-radius: 12px;
+      padding: 16px 20px;
+      color: #c0392b;
+      margin-top: 16px;
+      font-family: monospace;
+      font-size: 13px;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <h1>🎾 Академия тенниса — браузерные тесты (P1)</h1>
+  <p class="subtitle">
+    Открывать через http-сервер: <code>python3 -m http.server 8000</code>
+    → <a href="http://localhost:8000/tests/browser.html">http://localhost:8000/tests/browser.html</a>
+  </p>
+
+  <div id="test-results">
+    <p style="color:#888;font-style:italic;">Загрузка...</p>
+  </div>
+  <div id="error-box"></div>
+
+  <!--
+    Порядок подключения важен:
+    1. Заглушки: localStorage + cloud-слой (app.js зовёт cloudInit, cloudSyncProfile и др.)
+    2. questions.js — данные (QUESTION_BANK)
+    3. app.js — игровая логика (profile, getRank, getBlockStars, pickGameQuestions, ...)
+    4. logic.test.js — тесты (читают глобалы из app.js)
+
+    app.js при загрузке обращается к getElementById — экраны (null) не ломают код,
+    только cloud-функции нужны как заглушки-резолверы.
+  -->
+
+  <!-- Заглушки DOM-элементов, которые ищет app.js при инициализации -->
+  <div id="app-version" style="display:none"></div>
+
+  <script>
+    // -----------------------------------------------------------
+    // Перехват ошибок JS (показываем в #error-box)
+    // Флаг _testsRendered: если тесты уже отрендерены — не затираем #test-results,
+    // а только показываем предупреждение в #error-box (асинхронные ошибки app.js)
+    // -----------------------------------------------------------
+    window._testsRendered = false;
+    window.onerror = function(msg, src, line) {
+      var box = document.getElementById('error-box');
+      box.style.display = 'block';
+      box.textContent = 'Ошибка JS:\n' + msg + '\n' + src + ':' + line;
+      if (!window._testsRendered) {
+        document.getElementById('test-results').innerHTML =
+          '<p style="color:#c0392b;font-weight:bold;">Загрузка не удалась — см. ошибку ниже.</p>';
+        document.title = '✗ ОШИБКА загрузки — tennis tests';
+      }
+    };
+
+    // -----------------------------------------------------------
+    // Заглушка localStorage — тесты читают/пишут изолированное хранилище
+    // -----------------------------------------------------------
+    (function patchLocalStorage() {
+      var store = {};
+      var fake = {
+        getItem:    function(k) { return Object.prototype.hasOwnProperty.call(store, k) ? store[k] : null; },
+        setItem:    function(k, v) { store[k] = String(v); },
+        removeItem: function(k) { delete store[k]; },
+        clear:      function() { store = {}; }
+      };
+      try { Object.defineProperty(window, 'localStorage', { value: fake, configurable: true }); }
+      catch(e) { /* старый Safari может не позволить переопределить — не критично */ }
+    })();
+
+    // -----------------------------------------------------------
+    // Заглушки cloud-слоя (cloud.js не подключён — app.js всё равно зовёт эти функции)
+    // Все возвращают резолвнутые Promise, чтобы app.js не падал на .then()
+    // -----------------------------------------------------------
+    var CLOUD_BACKEND_URL = null;  // офлайн-режим
+
+    function cloudInit()          { return Promise.resolve(false); }
+    function cloudWaitForAuth()   { return Promise.resolve(null);  }
+    function cloudSyncProfile()   {}
+    function cloudPostFeedEvent() {}
+    function cloudSubscribeWall(cb) { return function() {}; } // возвращает unsubscribe
+    function cloudLoadPlayer()    { return Promise.resolve(null); }
+    function loadAccount()        { return null; }
+    function cloudRegister()      { return Promise.resolve({ ok: false }); }
+    function cloudSignIn()        { return Promise.resolve({ ok: false }); }
+    function cloudSignOut()       {}
+  </script>
+
+  <!-- 1. Данные -->
+  <script src="../questions.js"></script>
+
+  <!-- 2. Игровая логика -->
+  <script src="../app.js"></script>
+
+  <!-- 3. Тесты — запускаются синхронно сразу после загрузки app.js -->
+  <script src="logic.test.js"></script>
+</body>
+</html>

@@ -26,6 +26,7 @@ python3 -m http.server 8000   # из корня репо, открыть http://
   Менять только `tennis_question_bank.md`, затем пересобирать — `questions.js` не редактировать.
 - **Деплой фронта:** скилл `/deploy-frontend` — бамп `?v=N` (4 ссылки в index.html) +
   `APP_VERSION` в app.js → commit → `git push` (GitHub Pages пересобирает сам).
+- **Тесты (P0, данные):** `python3 tests/run.py` — проверяет `questions.js` (17 блоков, 116 вопросов, кросс-сверка с банком). Все строки `PASS`, код выхода 0. Браузерный P1: `python3 -m http.server 8000`, открыть `http://localhost:8000/tests/browser.html`.
 - **Деплой бэкенда:** `yc serverless function version create --function-name tennis-api
   --runtime python312 --entrypoint handler.handler --memory 128m --execution-timeout 30s
   --source-path backend --service-account-id ajemrlkcqardi59ug72a --environment ...`
