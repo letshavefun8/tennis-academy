@@ -6,7 +6,7 @@
 
 // Версия сборки — меняется при каждом деплое, видна внизу экрана.
 // Помогает убедиться, что на боевой сайт долетела свежая версия.
-var APP_VERSION = 'сборка 30 · 21.06';
+var APP_VERSION = 'сборка 31 · 22.06';
 
 // Показываем версию внизу страницы
 (function showVersion() {
@@ -1951,6 +1951,15 @@ function applyAccountAfterSignIn(uid, name) {
     // уровней) и счётчик дней. getBlockStars берёт максимум с локальной историей.
     profile.cloudBlockStars = (cloudData.blockStars && typeof cloudData.blockStars === 'object' && !Array.isArray(cloudData.blockStars)) ? cloudData.blockStars : {};
     profile.cloudDaysCount = (typeof cloudData.daysCount === 'number') ? cloudData.daysCount : 0;
+
+    // Пере-выдаём достижения, заслуженные по синхронизированным данным.
+    // Значки локальные (на сервер не уходят) — при входе на НОВОМ устройстве
+    // их надо восстановить из облачных звёзд/серии, иначе «Спецкурс пройден»
+    // и «Серия 5» покажутся незаработанными, хотя по данным они есть.
+    if (cloudBest >= 5) awardBadge('streak5', true);
+    for (var bidR = 7; bidR <= 16; bidR++) {
+      if (getBlockStars(bidR) === 3) { awardBadge('course', true); break; }
+    }
 
     if (localPts > 0) {
       // Локальный прогресс есть — предлагаем слияние
