@@ -12,8 +12,9 @@
 var CLOUD_BACKEND_URL = 'https://d5devrobt9pb45srhc84.628pfjdx.apigw.yandexcloud.net';
 
 // Ключи в localStorage
-var ACCOUNT_KEY    = 'tennisAcademy.account';    // { uid, name, token }
-var SYNC_QUEUE_KEY = 'tennisAcademy.syncQueue';  // офлайн-очередь feed-событий
+var ACCOUNT_KEY     = 'tennisAcademy.account';     // { uid, name, token }
+var SYNC_QUEUE_KEY  = 'tennisAcademy.syncQueue';   // офлайн-очередь feed-событий
+var PENDING_SYNC_KEY = 'tennisAcademy.pendingSync'; // последний несостоявшийся /sync (агрегаты профиля)
 
 // Флаг готовности облака (бэкенд настроен)
 var cloudReady = false;
@@ -157,7 +158,9 @@ function flushSyncQueue() {
   });
 }
 
-window.addEventListener('online', function () { if (cloudReady) flushSyncQueue(); });
+window.addEventListener('online', function () {
+  if (cloudReady) { flushPendingSync(); flushSyncQueue(); }
+});
 
 // =====================================================
 // ИНИЦИАЛИЗАЦИЯ
@@ -170,6 +173,7 @@ window.addEventListener('online', function () { if (cloudReady) flushSyncQueue()
 function cloudInit() {
   cloudReady = !!CLOUD_BACKEND_URL;
   if (cloudReady) {
+    flushPendingSync(); // досылаем профиль, если прошлый /sync не дошёл (холодный старт/обрыв)
     flushSyncQueue();
     apiGet('/feed'); // прогрев serverless-функции, чтобы Стена потом открывалась без холодного старта
   }
@@ -235,11 +239,46 @@ function cloudSyncProfile() {
   var token = accountToken();
   if (!token) return;
   var payload = buildAggregates();
-  payload.token = token;
   // очки за текущую сессию — для пересчёта недельного рейтинга при смене недели
   payload.sessionPoints = (typeof session !== 'undefined' && session) ? (session.sessionPoints || 0) : 0;
+  // Запоминаем агрегаты как «ожидающие подтверждения»: если /sync не дойдёт
+  // (холодный старт serverless, обрыв сети), повторим позже — иначе прогресс
+  // игрока потеряется на сервере, а лента-то уйдёт через свою очередь, и игрок
+  // окажется на Стене, но с устаревшими очками/неделей (его «нет» в рейтинге).
+  try { localStorage.setItem(PENDING_SYNC_KEY, JSON.stringify(payload)); } catch (e) {}
+  payload.token = token;
   apiPost('/sync', payload).then(function (res) {
-    if (res && res.ok) flushSyncQueue();
+    if (res && res.ok) {
+      try { localStorage.removeItem(PENDING_SYNC_KEY); } catch (e) {}
+      flushSyncQueue();
+    }
+  });
+}
+
+/**
+ * Досылает последний несостоявшийся /sync (если он есть). Вызывается при
+ * запуске и при возврате сети. Агрегаты берём из сохранённого снимка —
+ * с теми же sessionPoints, что и в провалившейся попытке, чтобы недельный
+ * рейтинг пересчитался корректно при смене недели.
+ */
+function flushPendingSync() {
+  if (!cloudReady) return;
+  var token = accountToken();
+  if (!token) return;
+  var raw;
+  try { raw = localStorage.getItem(PENDING_SYNC_KEY); } catch (e) { return; }
+  if (!raw) return;
+  var payload;
+  try { payload = JSON.parse(raw); } catch (e) {
+    try { localStorage.removeItem(PENDING_SYNC_KEY); } catch (e2) {}
+    return;
+  }
+  payload.token = token;
+  apiPost('/sync', payload).then(function (res) {
+    if (res && res.ok) {
+      try { localStorage.removeItem(PENDING_SYNC_KEY); } catch (e) {}
+      flushSyncQueue();
+    }
   });
 }
 

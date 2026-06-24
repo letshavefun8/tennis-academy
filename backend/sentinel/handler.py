@@ -38,7 +38,12 @@ def _alert(text):
         return r.read()
 
 
-def handler(event, context):
+def _probe():
+    """Одна проба эндпоинта. Возвращает (healthy, latency, detail).
+
+    healthy=True — код 200 и тело парсится как JSON.
+    detail — человекочитаемая причина сбоя (для алерта), иначе "".
+    """
     t0 = time.time()
     try:
         with urllib.request.urlopen(CHECK_URL, timeout=15) as r:
@@ -46,20 +51,31 @@ def handler(event, context):
             body = r.read().decode("utf-8")
         latency = time.time() - t0
         json.loads(body)  # тело должно парситься как JSON
-        healthy = code == 200
-    except Exception as e:  # сеть/таймаут/битый JSON
-        _alert(
-            "🚨 Академия тенниса: бэкенд не отвечает корректно. "
-            "Ошибка: %s: %s" % (type(e).__name__, e)
+        if code == 200:
+            return True, latency, ""
+        return False, latency, "Код: %s. Задержка: %.2f c. Тело: %s" % (
+            code, latency, body[:200]
         )
-        return {"statusCode": 200, "body": "alert sent"}
+    except Exception as e:  # сеть/таймаут/битый JSON
+        return False, time.time() - t0, "Ошибка: %s: %s" % (type(e).__name__, e)
 
+
+def handler(event, context):
+    # Первая проба может словить холодный старт (поднятие контейнера +
+    # переподключение к YDB) и упереться в таймаут. Поэтому при сбое ждём
+    # немного и пробуем ещё раз — на тёплой функции. Алерт шлём, только если
+    # упали ОБЕ пробы: так отсекаем ложные тревоги на холодном старте.
+    healthy, latency, detail = _probe()
     if healthy:
         return {"statusCode": 200, "body": "OK %.2fs" % latency}
 
-    snippet = body[:200]
+    time.sleep(3)
+    healthy, latency, detail = _probe()
+    if healthy:
+        return {"statusCode": 200, "body": "OK on retry %.2fs" % latency}
+
     _alert(
-        "🚨 Академия тенниса: бэкенд не отвечает корректно. "
-        "Код: %s. Задержка: %.2f c. Тело: %s" % (code, latency, snippet)
+        "🚨 Академия тенниса: бэкенд не отвечает корректно (2 попытки). "
+        + detail
     )
     return {"statusCode": 200, "body": "alert sent"}
